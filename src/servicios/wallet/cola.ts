@@ -70,17 +70,29 @@ export interface ResultadoProceso {
  * llama desde el tap: ese solo encola.
  */
 export async function procesarCola(
-  opciones: { limite?: number } = {},
+  opciones: { limite?: number; localId?: string } = {},
   db: BaseDeDatos = dbPorDefecto,
 ): Promise<ResultadoProceso> {
   const emisor = obtenerEmisor();
   const issuerId = issuerIdActual();
   const limite = opciones.limite ?? 50;
 
+  /**
+   * El filtro por local existe por seguridad, no por rendimiento: permite
+   * procesar un local concreto sin arrastrar a los demás. Hace falta cuando
+   * la base de desarrollo tiene locales de prueba y NO se quiere crear su
+   * plantilla en Google, porque Google no permite borrarlas.
+   */
+  const condiciones = [
+    eq(colaWallet.estado, 'pendiente'),
+    lt(colaWallet.intentos, MAXIMO_INTENTOS),
+  ];
+  if (opciones.localId) condiciones.push(eq(colaWallet.localId, opciones.localId));
+
   const pendientes = await db
     .select()
     .from(colaWallet)
-    .where(and(eq(colaWallet.estado, 'pendiente'), lt(colaWallet.intentos, MAXIMO_INTENTOS)))
+    .where(and(...condiciones))
     .orderBy(asc(colaWallet.creadoEn))
     .limit(limite);
 
@@ -188,18 +200,21 @@ async function ejecutar(
     local.sellosObjetivo,
   );
 
+  const base = process.env.URL_PUBLICA ?? 'http://localhost:3011';
+  const urlTarjeta = `${base}/c/${local.slug}/tarjeta`;
+
   if (item.tipo === 'actualizar_sellos') {
     await emisor.actualizarSellos({
       issuerId,
       clienteId: cliente.id,
       estado,
       premio: local.premio,
+      urlTarjeta,
     });
     return true;
   }
 
   // crear_objeto
-  const base = process.env.URL_PUBLICA ?? 'http://localhost:3011';
   const { enlace } = await emisor.crearObjeto({
     issuerId,
     localId: local.localId,
@@ -207,7 +222,7 @@ async function ejecutar(
     clienteNombre: cliente.nombre,
     estado,
     premio: local.premio,
-    urlTarjeta: `${base}/c/${local.slug}/tarjeta`,
+    urlTarjeta,
   });
 
   // Se registra la tarjeta para no volver a crearla y para saber si se logró

@@ -61,6 +61,7 @@ export interface Emisor {
     clienteId: string;
     estado: EstadoClub;
     premio: string;
+    urlTarjeta: string;
   }): Promise<void>;
 }
 
@@ -102,11 +103,11 @@ export function crearEmisorSimulado(issuerIdFalso = 'SIMULADO'): EmisorSimulado 
       return { enlace: `https://simulado.sellofiel.local/wallet/${issuerIdFalso}/${datos.clienteId}` };
     },
 
-    async actualizarSellos({ issuerId, clienteId, estado, premio }) {
+    async actualizarSellos({ issuerId, clienteId, estado, premio, urlTarjeta }) {
       llamadas.push({
         operacion: 'actualizar_sellos',
         id: idDeObjeto(issuerId, clienteId),
-        cuerpo: construirParcheSellos(estado, premio),
+        cuerpo: construirParcheSellos(estado, premio, urlTarjeta),
       });
     },
   };
@@ -217,12 +218,12 @@ export function crearEmisorGoogle(config: ConfiguracionEmisor): Emisor {
       return { enlace: enlaceParaAgregar(jwt) };
     },
 
-    async actualizarSellos({ issuerId, clienteId, estado, premio }) {
+    async actualizarSellos({ issuerId, clienteId, estado, premio, urlTarjeta }) {
       const id = idDeObjeto(issuerId, clienteId);
       const respuesta = await llamar(
         'PATCH',
         `/loyaltyObject/${encodeURIComponent(id)}`,
-        construirParcheSellos(estado, premio),
+        construirParcheSellos(estado, premio, urlTarjeta),
       );
 
       if (!respuesta.ok) {

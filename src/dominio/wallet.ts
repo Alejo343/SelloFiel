@@ -210,14 +210,30 @@ export function enlaceParaAgregar(jwtFirmado: string): string {
 /**
  * El parche que se manda al actualizar los sellos.
  *
- * Es un PATCH y no un PUT: así se cambia solo el saldo y el texto, sin pisar
- * nada más del objeto.
+ * Es un PATCH y no un PUT: así se cambia solo lo que depende de los sellos,
+ * sin pisar el resto del objeto.
+ *
+ * OJO con el `barcode`: su `alternateText` también muestra el conteo, así que
+ * hay que mandarlo en cada actualización. Si no, la tarjeta queda diciendo
+ * "0/5 sellos" bajo el QR para siempre mientras el saldo de arriba sí sube.
+ * Pasó de verdad el 2026-11-16. Y hay que mandar el barcode COMPLETO, porque
+ * un PATCH sobre un objeto anidado reemplaza el objeto entero: mandar solo
+ * `alternateText` borraría el tipo y el valor del código.
  */
-export function construirParcheSellos(estado: EstadoClub, premio: string) {
+export function construirParcheSellos(
+  estado: EstadoClub,
+  premio: string,
+  urlTarjeta: string,
+) {
   return {
     loyaltyPoints: {
       label: 'Sellos',
       balance: { int: estado.sellos },
+    },
+    barcode: {
+      type: 'QR_CODE',
+      value: urlTarjeta,
+      alternateText: `${estado.sellos}/${estado.objetivo} sellos`,
     },
     textModulesData: [
       {

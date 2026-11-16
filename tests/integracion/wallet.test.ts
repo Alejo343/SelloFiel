@@ -399,3 +399,26 @@ describe('el logo que Google exige', () => {
     }
   });
 });
+
+describe('procesarCola filtrando por local', () => {
+  it('procesa solo el local pedido y deja los demás intactos', async () => {
+    // Importa por seguridad: en desarrollo conviven locales de prueba cuyas
+    // plantillas NO deben llegar a Google, porque no se pueden borrar.
+    const otro = await crearLocalDePrueba(base.db);
+
+    await encolar({ localId: local.localId, tipo: 'crear_clase' }, base.db);
+    await encolar({ localId: otro.localId, tipo: 'crear_clase' }, base.db);
+
+    const resultado = await procesarCola({ localId: local.localId }, base.db);
+
+    expect(resultado.procesados).toBe(1);
+    expect(emisor.llamadas).toHaveLength(1);
+
+    const quedaPendiente = await base.db
+      .select()
+      .from(colaWallet)
+      .where(eq(colaWallet.localId, otro.localId));
+
+    expect(quedaPendiente[0].estado).toBe('pendiente');
+  });
+});

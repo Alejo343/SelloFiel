@@ -155,16 +155,43 @@ describe('construirObjeto', () => {
 });
 
 describe('construirParcheSellos', () => {
-  it('solo cambia el saldo y el texto, para no pisar el resto del objeto', () => {
-    const parche = construirParcheSellos(calcularEstado(5, 10), 'Un café');
+  const URL = 'https://sellofiel.test/c/la-esquina/tarjeta';
 
-    expect(Object.keys(parche).sort()).toEqual(['loyaltyPoints', 'textModulesData']);
+  it('cambia el saldo sin pisar el resto del objeto', () => {
+    const parche = construirParcheSellos(calcularEstado(5, 10), 'Un café', URL);
+
+    expect(Object.keys(parche).sort()).toEqual(['barcode', 'loyaltyPoints', 'textModulesData']);
     expect(parche.loyaltyPoints.balance.int).toBe(5);
   });
 
   it('refleja el premio disponible', () => {
-    const parche = construirParcheSellos(calcularEstado(10, 10), 'Un café');
+    const parche = construirParcheSellos(calcularEstado(10, 10), 'Un café', URL);
     expect(parche.textModulesData[0].header).toContain('Premio disponible');
+  });
+
+  it('actualiza TAMBIÉN el texto que va bajo el código QR', () => {
+    // Error real detectado el 2026-11-16 mirando la tarjeta en un celular:
+    // el saldo subía a 3 pero bajo el QR seguía diciendo "0/5 sellos",
+    // porque el parche no incluía el barcode.
+    const parche = construirParcheSellos(calcularEstado(3, 5), 'Un café', URL);
+    expect(parche.barcode.alternateText).toBe('3/5 sellos');
+  });
+
+  it('manda el barcode completo, no solo el texto', () => {
+    // Un PATCH sobre un objeto anidado reemplaza el objeto entero: mandar
+    // solo alternateText borraría el tipo y el valor del código.
+    const parche = construirParcheSellos(calcularEstado(3, 5), 'Un café', URL);
+    expect(parche.barcode.type).toBe('QR_CODE');
+    expect(parche.barcode.value).toBe(URL);
+  });
+
+  it('el texto bajo el QR coincide siempre con el saldo', () => {
+    for (const sellos of [0, 1, 4, 5, 7]) {
+      const estado = calcularEstado(sellos, 5);
+      const parche = construirParcheSellos(estado, 'Un café', URL);
+      expect(parche.barcode.alternateText).toBe(`${estado.sellos}/5 sellos`);
+      expect(parche.loyaltyPoints.balance.int).toBe(estado.sellos);
+    }
   });
 });
 
