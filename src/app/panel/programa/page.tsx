@@ -44,6 +44,40 @@ export default async function PaginaPrograma({ searchParams }: PageProps<'/panel
         </div>
 
         <div className="campo">
+          <label htmlFor="logoUrl">Logo del local</label>
+          <input
+            id="logoUrl"
+            name="logoUrl"
+            type="url"
+            placeholder="https://tu-sitio.com/logo.png"
+            defaultValue={local.logoUrl ?? ''}
+          />
+          <small>
+            Es el logo que tus clientes ven en su tarjeta del celular. Imagen cuadrada, de 640 a
+            1024 píxeles, en un enlace público que empiece por https. <strong>Importante:</strong>{' '}
+            ese enlace no se puede cambiar de sitio después, porque las tarjetas ya emitidas
+            quedarían con el logo roto. Si lo dejas vacío, se usa el logo de Sello Fiel.
+          </small>
+          {local.logoUrl && (
+            <p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={local.logoUrl} alt={`Logo de ${local.nombre}`} width={72} height={72} />
+            </p>
+          )}
+        </div>
+
+        <div className="campo">
+          <label htmlFor="colorPrimario">Color de la tarjeta</label>
+          <input
+            id="colorPrimario"
+            name="colorPrimario"
+            type="color"
+            defaultValue={local.colorPrimario}
+          />
+          <small>El fondo de la tarjeta en el celular de tus clientes.</small>
+        </div>
+
+        <div className="campo">
           <label htmlFor="whatsapp">WhatsApp del local</label>
           <input
             id="whatsapp"

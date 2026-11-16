@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { normalizarTelefono } from '@/dominio/telefono';
 import { exigirSesion } from '@/lib/cookies-panel';
 import { actualizarLocal, actualizarPrograma } from '@/servicios/panel';
+import { encolar } from '@/servicios/wallet/cola';
 
 const esquema = z.object({
   nombre: z.string().trim().min(2, 'El nombre del local es obligatorio').max(80),
@@ -19,6 +20,25 @@ const esquema = z.object({
   semanasInactividad: z.coerce.number().int().min(1).max(52),
   diasAntesCumple: z.coerce.number().int().min(0).max(60),
   whatsapp: z.string().trim().optional().or(z.literal('')),
+  /**
+   * Google descarga esta imagen desde sus servidores, así que tiene que ser
+   * pública y por HTTPS. Y tiene que ser permanente: Google no permite borrar
+   * las plantillas, así que si el local cambia la URL después, su tarjeta
+   * queda con el logo roto para siempre.
+   */
+  logoUrl: z
+    .string()
+    .trim()
+    .url('El logo tiene que ser un enlace completo, empezando por https://')
+    .refine((u) => u.startsWith('https://'), 'El enlace del logo tiene que ser https://')
+    .optional()
+    .or(z.literal('')),
+  colorPrimario: z
+    .string()
+    .trim()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'El color va en formato #RRGGBB')
+    .optional()
+    .or(z.literal('')),
   googleMapsUrl: z.string().trim().url('Ese enlace no parece válido').optional().or(z.literal('')),
   lat: z.string().trim().optional().or(z.literal('')),
   lng: z.string().trim().optional().or(z.literal('')),
@@ -70,7 +90,16 @@ export async function accionGuardarPrograma(datos: FormData): Promise<void> {
     googleMapsUrl: v.googleMapsUrl || null,
     lat: v.lat || null,
     lng: v.lng || null,
+    logoUrl: v.logoUrl || null,
+    colorPrimario: v.colorPrimario || undefined,
   });
+
+  /**
+   * La plantilla de Google lleva el nombre, el logo y el color del local, así
+   * que cualquier cambio acá tiene que reflejarse allá. `guardarClase` es
+   * idempotente: actualiza la que ya exista.
+   */
+  await encolar({ localId: sesion.localId, tipo: 'crear_clase' });
 
   redirect('/panel/programa?guardado=1');
 }

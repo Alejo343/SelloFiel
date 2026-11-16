@@ -86,6 +86,8 @@ export interface LocalDelPanel {
   localId: string;
   slug: string;
   nombre: string;
+  logoUrl: string | null;
+  colorPrimario: string;
   whatsapp: string | null;
   googleMapsUrl: string | null;
   lat: string | null;
@@ -107,6 +109,8 @@ export async function obtenerLocalDelPanel(
       localId: locales.id,
       slug: locales.slug,
       nombre: locales.nombre,
+      logoUrl: locales.logoUrl,
+      colorPrimario: locales.colorPrimario,
       whatsapp: locales.whatsapp,
       googleMapsUrl: locales.googleMapsUrl,
       lat: locales.lat,
@@ -353,6 +357,8 @@ export interface CambiosLocal {
   googleMapsUrl?: string | null;
   lat?: string | null;
   lng?: string | null;
+  logoUrl?: string | null;
+  colorPrimario?: string;
 }
 
 export async function actualizarLocal(

@@ -239,3 +239,47 @@ describe('enlaceParaAgregar', () => {
     );
   });
 });
+
+describe('cada local tiene SU tarjeta, no la de Sello Fiel', () => {
+  // Es la promesa de producto: el cliente final ve la marca del restaurante
+  // donde come, no la de la plataforma que hay por detrás.
+  const CLASE_LOCAL = {
+    ...DATOS_CLASE,
+    localNombre: 'Panadería Doña Rosa',
+    logoUrl: 'https://donarosa.co/logo.png',
+    colorPrimario: '#8b1e1e',
+    premio: 'Una docena de pandebonos',
+  };
+
+  it('muestra el nombre del local, no el de la plataforma', () => {
+    const clase = construirClase(CLASE_LOCAL);
+
+    expect(clase.issuerName).toBe('Panadería Doña Rosa');
+    expect(clase.programName).toBe('Club de Panadería Doña Rosa');
+    expect(JSON.stringify(clase)).not.toContain('Sello Fiel');
+  });
+
+  it('usa el logo del local', () => {
+    const logo = construirClase(CLASE_LOCAL).programLogo as { sourceUri: { uri: string } };
+    expect(logo.sourceUri.uri).toBe('https://donarosa.co/logo.png');
+  });
+
+  it('usa el color del local como fondo de la tarjeta', () => {
+    expect(construirClase(CLASE_LOCAL).hexBackgroundColor).toBe('#8b1e1e');
+  });
+
+  it('dos locales distintos dan dos plantillas distintas', () => {
+    const otra = construirClase({
+      ...CLASE_LOCAL,
+      localId: 'cccccccc-3333-4333-8333-cccccccccccc',
+      localNombre: 'Café del Parque',
+      logoUrl: 'https://cafedelparque.co/logo.png',
+      colorPrimario: '#1C7A3E',
+    });
+    const una = construirClase(CLASE_LOCAL);
+
+    expect(una.id).not.toBe(otra.id);
+    expect(una.issuerName).not.toBe(otra.issuerName);
+    expect(una.hexBackgroundColor).not.toBe(otra.hexBackgroundColor);
+  });
+});
