@@ -14,10 +14,24 @@ Los reels originales con sus transcripciones están en
 
 ## Estado
 
-Fases 0 a 3 y **4A** terminadas. Siguiente: **Fase 5 — mensajes para que vuelvan** (la 4B espera
-la cuenta de emisor de David).
+Fases 0 a 3, **4A** y **5** terminadas. Siguiente: **Fase 6 — antifraude**, donde además hay que
+rediseñar los mecanismos de identificación (ver el QR copiable en `docs/REQUISITOS.md` §6).
 
-244 pruebas en verde: 135 unitarias, 87 de integración y 22 de punta a punta en móvil simulado.
+310 pruebas en verde: 157 unitarias, 124 de integración y 29 de punta a punta en móvil simulado.
+
+Dos trabajos programados, pensados para cron:
+- `npm run wallet:procesar` (cada minuto) — empuja los sellos a Google Wallet.
+- `npm run mensajes:generar` (cada hora) — calcula a quién escribirle hoy. **Cada hora y no una
+  vez al día** por la pregunta de después de la visita: con una sola corrida diaria, a quien
+  viene por la tarde se le preguntaría al día siguiente.
+
+**Las pruebas de punta a punta usan el puerto 3012**, no el 3011 de producción. Compartirlo hacía
+que Playwright reutilizara el servidor en vivo y corriera contra la compilación desplegada en vez
+de contra el código recién escrito.
+
+Los mensajes no se duplican gracias a la **clave de ocasión** (`claveDeOcasion`): el trabajo corre
+a diario y la ventana de cumpleaños dura una semana, así que sin ella el cliente recibiría siete
+felicitaciones.
 
 **Google Wallet funciona en modo simulado.** El emisor se elige por la presencia de credenciales:
 sin `WALLET_ISSUER_ID`, `WALLET_CUENTA_SERVICIO_EMAIL` y `WALLET_CLAVE_PRIVADA` en el `.env`, se

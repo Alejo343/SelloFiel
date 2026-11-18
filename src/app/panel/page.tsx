@@ -12,6 +12,7 @@ import { notFound } from 'next/navigation';
 import { diaEnZona } from '@/dominio/fechas';
 import { fraseRetorno } from '@/dominio/metricas';
 import { exigirSesion } from '@/lib/cookies-panel';
+import { contarPendientes } from '@/servicios/mensajes';
 import { cumpleanosProximos, obtenerLocalDelPanel, resumenDelLocal } from '@/servicios/panel';
 
 import { accionSalir } from './acciones';
@@ -25,9 +26,10 @@ export default async function PaginaPanel() {
   const hoy = diaEnZona(new Date(), local.zonaHoraria);
   const inicioDelMes = `${hoy.slice(0, 7)}-01`;
 
-  const [resumen, cumples] = await Promise.all([
+  const [resumen, cumples, pendientes] = await Promise.all([
     resumenDelLocal(sesion.localId, { desde: inicioDelMes, hasta: hoy }),
     cumpleanosProximos(sesion.localId, hoy, local.diasAntesCumple),
+    contarPendientes(sesion.localId),
   ]);
 
   return (
@@ -51,6 +53,21 @@ export default async function PaginaPanel() {
       </section>
 
       <section>
+        <h2>Mensajes por enviar</h2>
+        {pendientes === 0 ? (
+          <p>Nada pendiente por ahora.</p>
+        ) : (
+          <p>
+            <strong>
+              <Link href="/panel/mensajes">
+                Tienes {pendientes} {pendientes === 1 ? 'mensaje' : 'mensajes'} por enviar
+              </Link>
+            </strong>
+          </p>
+        )}
+      </section>
+
+      <section>
         <h2>Cumpleaños en los próximos {local.diasAntesCumple} días</h2>
         {cumples.length === 0 ? (
           <p>Ninguno por ahora.</p>
@@ -64,12 +81,7 @@ export default async function PaginaPanel() {
             ))}
           </ul>
         )}
-        <p>
-          <small>
-            Los mensajes de cumpleaños e inactividad llegan en la Fase 5. Por ahora esta lista
-            sirve para escribirles a mano.
-          </small>
-        </p>
+
       </section>
 
       <nav>
@@ -77,6 +89,9 @@ export default async function PaginaPanel() {
         <ul>
           <li>
             <Link href="/panel/clientes">Mis clientes ({resumen.clientesTotales})</Link>
+          </li>
+          <li>
+            <Link href="/panel/mensajes">Mensajes por enviar ({pendientes})</Link>
           </li>
           <li>
             <Link href="/panel/programa">Configurar el club</Link>

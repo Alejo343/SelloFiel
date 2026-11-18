@@ -7,7 +7,14 @@ import { defineConfig, devices } from '@playwright/test';
  * entra desde el teléfono (RNF-02), así que probar en escritorio daría una
  * confianza falsa.
  */
-const PUERTO = 3011;
+/**
+ * Puerto propio, DISTINTO del de producción (3011).
+ *
+ * Antes compartían el 3011 y Playwright reutilizaba el servidor de
+ * producción: las pruebas corrían contra la aplicación en vivo y con la
+ * compilación que estuviera desplegada, no con el código recién escrito.
+ */
+const PUERTO = 3012;
 
 export default defineConfig({
   testDir: './tests/e2e',

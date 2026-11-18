@@ -91,3 +91,10 @@ label {
     text-align: center;
   }
 }
+
+textarea {
+  font: inherit;
+  padding: 0.75rem;
+  width: 100%;
+  min-height: 5rem;
+}

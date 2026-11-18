@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "wallet:procesar": "tsx scripts/procesar-wallet.ts"
+    "wallet:procesar": "tsx scripts/procesar-wallet.ts",
+    "mensajes:generar": "tsx scripts/generar-mensajes.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.4",

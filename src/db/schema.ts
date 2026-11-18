@@ -316,6 +316,17 @@ export const mensajes = pgTable(
       .notNull()
       .references(() => clientes.id, { onDelete: 'cascade' }),
     tipo: tipoMensaje('tipo').notNull(),
+    /**
+     * Clave de deduplicación: impide generar el mismo mensaje dos veces.
+     *
+     * No basta con mirar el tipo, porque la ventana de cumpleaños dura varios
+     * días y el trabajo diario pasaría cada uno de ellos. La clave codifica la
+     * "ocasión": `cumpleanos:2026` (uno por año), `inactividad:<día del último
+     * sello>` (uno por racha de ausencia, y otro distinto si vuelve y se
+     * vuelve a ir), `post_visita:<día del sello>` (uno por visita),
+     * `bienvenida` (uno en la vida).
+     */
+    clave: text('clave').notNull(),
     /** Texto ya resuelto, con los marcadores reemplazados */
     texto: text('texto').notNull(),
     estado: estadoMensaje('estado').notNull().default('pendiente'),
@@ -326,6 +337,46 @@ export const mensajes = pgTable(
   (t) => [
     index('mensajes_local_estado_idx').on(t.localId, t.estado, t.programadoPara),
     index('mensajes_cliente_idx').on(t.clienteId),
+    unique('mensajes_cliente_clave_unico').on(t.clienteId, t.clave),
+  ],
+);
+
+/* -------------------------------------------------------------- opiniones */
+
+export const calificacionVisita = pgEnum('calificacion_visita', ['buena', 'mala']);
+
+/**
+ * Lo que responde el cliente cuando se le pregunta cómo estuvo su visita
+ * (RF-28).
+ *
+ * El punto del producto: si estuvo bien, se le lleva a dejar la reseña en
+ * Google Maps; si estuvo mal, la queja llega al dueño y NO a Google. De los
+ * reels: "está bueno las quejas, porque las quejas no llevan al cliente, nos
+ * llevan a nosotros directamente".
+ */
+export const opiniones = pgTable(
+  'opiniones',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    localId: uuid('local_id')
+      .notNull()
+      .references(() => locales.id, { onDelete: 'cascade' }),
+    clienteId: uuid('cliente_id')
+      .notNull()
+      .references(() => clientes.id, { onDelete: 'cascade' }),
+    /** El sello (la visita) sobre el que se opina */
+    selloId: uuid('sello_id').references(() => sellos.id, { onDelete: 'set null' }),
+    calificacion: calificacionVisita('calificacion').notNull(),
+    /** Solo cuando la calificación es mala */
+    comentario: text('comentario'),
+    /** El dueño ya la vio */
+    revisadaEn: timestamp('revisada_en', { withTimezone: true }),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('opiniones_local_idx').on(t.localId, t.creadoEn),
+    /** Una opinión por visita: el enlace se puede abrir varias veces */
+    unique('opiniones_cliente_sello_unico').on(t.clienteId, t.selloId),
   ],
 );
 
@@ -420,3 +471,5 @@ export type Mensaje = typeof mensajes.$inferSelect;
 export type UsuarioLocal = typeof usuariosLocal.$inferSelect;
 export type Tarjeta = typeof tarjetas.$inferSelect;
 export type ItemColaWallet = typeof colaWallet.$inferSelect;
+export type Plantilla = typeof plantillas.$inferSelect;
+export type Opinion = typeof opiniones.$inferSelect;

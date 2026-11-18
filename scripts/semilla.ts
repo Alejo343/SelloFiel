@@ -116,7 +116,7 @@ async function sembrar() {
       {
         localId: esquina.id,
         tipo: 'post_visita',
-        texto: '{nombre}, ¿cómo estuvo todo hoy en La Esquina?',
+        texto: '{nombre}, ¿cómo estuvo todo hoy en La Esquina? Cuéntanos acá: {enlace}',
       },
     ]);
 

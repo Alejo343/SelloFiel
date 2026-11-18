@@ -199,7 +199,7 @@ de prueba y con la anotación "[TEST ONLY]".
 
 ---
 
-### Fase 5 — Mensajes para que vuelvan
+### Fase 5 — Mensajes para que vuelvan ✅ terminada el 2026-11-18
 
 **Entregables**
 - Plantillas editables por local: bienvenida, cumpleaños, inactividad, post-visita, evento.
