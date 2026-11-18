@@ -268,6 +268,57 @@ async function sembrar() {
       tagId: tagVecino.id,
     });
 
+    /* ------------------------- local de pruebas de Google Wallet -------- */
+    /**
+     * Tiene identificadores FIJOS, y eso es deliberado.
+     *
+     * Los identificadores de la plantilla y del pase en Google derivan de
+     * estos UUID, y Google NO permite borrar ni plantillas ni pases. Si este
+     * local se recreara con ids nuevos en cada siembra, cada siembra dejaría
+     * una plantilla huérfana e imborrable en la cuenta de emisor.
+     *
+     * Corresponde a la tarjeta real que David tiene en su celular.
+     */
+    const [pruebas] = await db
+      .insert(locales)
+      .values({
+        id: 'da3a6072-ae2a-4a35-8c5b-b0aeb9d61008',
+        slug: 'sellofiel-pruebas',
+        nombre: 'Sello Fiel — Pruebas',
+        colorPrimario: '#1F2A44',
+        logoUrl: 'https://sellofiel.app/marca/logo.png',
+        lat: '4.6533',
+        lng: '-74.0836',
+      })
+      .returning();
+
+    await db.insert(programas).values({
+      localId: pruebas.id,
+      sellosObjetivo: 5,
+      premio: 'Un café de prueba',
+    });
+
+    const [clientePruebas] = await db
+      .insert(clientes)
+      .values({
+        id: '71b1c39f-e073-491f-a8f8-aa609296525d',
+        localId: pruebas.id,
+        nombre: 'David Galeano',
+        telefono: '573000000001',
+        consentimientoEn: new Date(),
+        consentimientoVersion: VERSION_CONSENTIMIENTO,
+      })
+      .returning();
+
+    await db.insert(sellos).values(
+      [0, 1, 2, 3, 4].map((atras) => ({
+        localId: pruebas.id,
+        clienteId: clientePruebas.id,
+        fecha: diaRelativo(-atras),
+        origen: 'manual' as const,
+      })),
+    );
+
     console.log('Semilla lista:');
     console.log(`  La Esquina   (${esquina.slug})  5 clientes, 13 sellos, 2 tags`);
     console.log(`  Café Vecino  (${vecino.slug})  1 cliente,  1 sello,  1 tag`);
@@ -275,6 +326,8 @@ async function sembrar() {
     console.log('  Carlos Cumple y Sofía Vecina cumplen en 3 días.');
     console.log('  Pedro Baja pidió la baja y no debe recibir mensajes.');
     console.log('  Marta y Sofía comparten teléfono en locales distintos, a propósito.');
+    console.log('');
+    console.log('  Sello Fiel — Pruebas: local real de Google Wallet, 5/5 sellos, ids fijos.');
     console.log('');
     console.log(`  Panel: dueno@laesquina.test / ${CONTRASENA_DEMO}`);
     console.log(`         dueno@cafevecino.test / ${CONTRASENA_DEMO}`);

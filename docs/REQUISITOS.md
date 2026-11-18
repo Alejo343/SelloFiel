@@ -197,7 +197,14 @@ Verificadas el 2026-11-10. Condicionan lo que se le puede prometer a un local.
 8. **Un QR impreso fijo es copiable con una foto.** Es una URL estática: cualquiera la fotografía,
    la guarda y la abre desde donde quiera. Detectado el 2026-11-13.
 
-9. **Un chip NTAG213 tiene exactamente el mismo problema.** Es una idea contraintuitiva y conviene
+9. **El código QR del pase de Google no sirve para que el local identifique al cliente.** Apunta
+   a la tarjeta web, que reconoce al cliente por su cookie; quien lo escanee desde otro celular
+   ve "no reconocimos tu tarjeta". Es correcto en cuanto a privacidad —no filtra los datos del
+   cliente a quien pase por ahí— pero significa que hoy ese QR no le sirve al personal para
+   consultar el estado de un cliente. Detectado el 2026-11-18. Pendiente de decidir en la Fase 6,
+   junto con el resto del rediseño de los mecanismos de identificación.
+
+10. **Un chip NTAG213 tiene exactamente el mismo problema.** Es una idea contraintuitiva y conviene
    tenerla clara: el chip barato guarda una URL fija, y cualquier celular con NFC puede leerla y
    reutilizarla después. Lo único que resuelve esto de raíz es el **NTAG 424 DNA con SUN**, que
    genera un código distinto en cada toque. Es decir, el plan de "empezar con NTAG213" comparte la

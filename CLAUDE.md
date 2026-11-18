@@ -69,6 +69,14 @@ ni siquiera abre la página. Respaldos de `httpd_config.conf` en `/home/claude/r
 Cuando llegue el momento de publicar la app (panel y pantallas del cliente), hay que decidir
 dónde: `app.sellofiel.app` o `/panel` del mismo dominio. Sin decidir.
 
+**Desplegado en https://club.sellofiel.app** (PM2 `sellofiel`, `sudo pm2 restart sellofiel`).
+Tras cambiar código: `npm run build` y reiniciar.
+
+La semilla incluye el local `sellofiel-pruebas` con **identificadores fijos a propósito**: los
+ids de la plantilla y del pase en Google derivan de esos UUID, y Google no permite borrar ni
+plantillas ni pases. Con ids nuevos en cada siembra, cada siembra dejaría una plantilla huérfana
+e imborrable en la cuenta de emisor. No cambiarlos.
+
 Credenciales de la semilla para el panel (solo desarrollo):
 `dueno@laesquina.test` y `dueno@cafevecino.test`, contraseña `sellofiel2026`.
 
