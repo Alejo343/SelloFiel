@@ -25,6 +25,10 @@ async function principal() {
 
   try {
     const resultado = await generarMensajes({}, db);
+
+    // Corre cada hora: sin esto el log se llena de "mensajes nuevos=0".
+    if (resultado.creados === 0) return;
+
     const detalle = Object.entries(resultado.porTipo)
       .map(([tipo, n]) => `${tipo}=${n}`)
       .join(' ');

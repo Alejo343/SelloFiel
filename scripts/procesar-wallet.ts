@@ -24,6 +24,17 @@ async function principal() {
   try {
     const resultado = await procesarCola({ limite: 200 }, db);
 
+    /**
+     * Silencio cuando no hay nada que hacer.
+     *
+     * Esto corre cada minuto. Si registrara una línea siempre, en un año
+     * serían medio millón de líneas de "procesados=0" y el log dejaría de
+     * servir para encontrar un problema. Solo habla cuando pasa algo, que es
+     * justo cuando alguien lo va a leer.
+     */
+    const huboAlgo = resultado.procesados + resultado.fallidos + resultado.omitidos > 0;
+    if (!huboAlgo) return;
+
     const modo = emisor.real ? 'Google (real)' : 'SIMULADO (sin credenciales)';
     console.log(
       `[${new Date().toISOString()}] modo=${modo} ` +
