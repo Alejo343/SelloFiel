@@ -2,7 +2,10 @@ import 'dotenv/config';
 
 import { expect, test } from '@playwright/test';
 
+import { eq } from 'drizzle-orm';
+
 import { crearConexion } from '../../src/db';
+import { locales } from '../../src/db/schema';
 import { procesarCola } from '../../src/servicios/wallet/cola';
 import { crearEmisorSimulado, fijarEmisor } from '../../src/servicios/wallet/emisor';
 
@@ -163,7 +166,39 @@ test('la política es alcanzable desde el formulario, antes de aceptar', async (
   await expect(enlace).toHaveAttribute('href', '/c/la-esquina/politica');
 });
 
+test('un local que no emite pases no ofrece la tarjeta de Google Wallet', async ({ page }) => {
+  // En la semilla, La Esquina es un local de demostración y tiene emitePases
+  // en false: Google no deja borrar plantillas, así que un local de prueba no
+  // debe dejar nada permanente en la cuenta de emisor.
+  await page.goto(`/t/${TAG}`);
+  await page.getByRole('link', { name: /unirme al club/i }).click();
+  await page.getByLabel('Tu nombre').fill('Cliente Sin Wallet');
+  await page.getByLabel('Tu WhatsApp').fill(telefonoUnico());
+  await page.getByRole('checkbox').check();
+  await page.getByRole('button', { name: /unirme al club/i }).click();
+  await expect(page).toHaveURL(/\/c\/la-esquina\/tarjeta$/);
+
+  fijarEmisor(crearEmisorSimulado());
+  const { cliente: sql, db } = crearConexion(process.env.DATABASE_URL, 1);
+  try {
+    await procesarCola({}, db);
+  } finally {
+    await sql.end();
+    fijarEmisor(null);
+  }
+
+  await page.reload();
+  await expect(page.getByRole('link', { name: /google wallet/i })).toHaveCount(0);
+  // Pero sus sellos funcionan igual: lo único que pierde es el pase.
+  await expect(page.getByText('1 de 10 sellos')).toBeVisible();
+});
+
 test('tras procesar la cola, aparece el botón de guardar en Google Wallet', async ({ page }) => {
+  // Este sí emite pases, como un local real.
+  await conBaseE2E((db) =>
+    db.update(locales).set({ emitePases: true }).where(eq(locales.slug, 'la-esquina')),
+  );
+
   await page.goto(`/t/${TAG}`);
   await page.getByRole('link', { name: /unirme al club/i }).click();
   await page.getByLabel('Tu nombre').fill('Cliente Con Wallet');
@@ -201,4 +236,19 @@ test('tras procesar la cola, aparece el botón de guardar en Google Wallet', asy
 
   // En modo simulado el enlace es falso a propósito, y se tiene que notar.
   await expect(boton).toHaveAttribute('href', /simulado/);
+
+  // Se deja como estaba, para no afectar a las demás pruebas.
+  await conBaseE2E((db) =>
+    db.update(locales).set({ emitePases: false }).where(eq(locales.slug, 'la-esquina')),
+  );
 });
+
+/** Abre la base de las pruebas, hace algo y cierra. */
+async function conBaseE2E<T>(fn: (db: ReturnType<typeof crearConexion>['db']) => Promise<T>) {
+  const { cliente: sql, db } = crearConexion(process.env.DATABASE_URL, 1);
+  try {
+    return await fn(db);
+  } finally {
+    await sql.end();
+  }
+}
