@@ -17,6 +17,7 @@ import { notFound } from 'next/navigation';
 
 import { mensajeDelTap, type ResultadoTap } from '@/dominio/sellos';
 import { clienteDeLaCookie } from '@/lib/cookies-cliente';
+import { sincronizarWalletPronto } from '@/lib/sincronizar-wallet';
 import { obtenerCliente } from '@/servicios/clientes';
 import { sumarSello } from '@/servicios/sellos';
 import { resolverTag } from '@/servicios/tags';
@@ -76,6 +77,9 @@ export default async function PaginaTap({ params }: PageProps<'/t/[token]'>) {
     zonaHoraria: tag.zonaHoraria,
     tagId: tag.tagId,
   });
+
+  // El cliente puede abrir su wallet ahora mismo: que lo encuentre al día.
+  if (resultado.tipo === 'sello_sumado') sincronizarWalletPronto(tag.localId);
 
   return (
     <main>

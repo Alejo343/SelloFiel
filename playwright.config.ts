@@ -68,7 +68,22 @@ export default defineConfig({
   ],
   webServer: {
     command: `npx next dev --port ${PUERTO}`,
-    env: { ...process.env, DATABASE_URL: URL_BASE_E2E },
+    env: {
+      ...process.env,
+      DATABASE_URL: URL_BASE_E2E,
+      /**
+       * Sin credenciales de Google, el servidor usa el emisor simulado.
+       *
+       * Imprescindible: al sumar un sello, la aplicación empuja el cambio a
+       * Google en segundo plano. Con las credenciales reales puestas, cada
+       * corrida de pruebas crearía plantillas y pases de verdad en la cuenta
+       * de emisor, y Google NO permite borrarlos.
+       */
+      WALLET_ISSUER_ID: '',
+      WALLET_CREDENCIALES_ARCHIVO: '',
+      WALLET_CUENTA_SERVICIO_EMAIL: '',
+      WALLET_CLAVE_PRIVADA: '',
+    },
     url: `http://127.0.0.1:${PUERTO}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

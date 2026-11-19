@@ -11,6 +11,7 @@
 import { redirect } from 'next/navigation';
 
 import { recordarCliente } from '@/lib/cookies-cliente';
+import { sincronizarWalletPronto } from '@/lib/sincronizar-wallet';
 import { altaCliente } from '@/servicios/clientes';
 import { sumarSello } from '@/servicios/sellos';
 import { resolverLocalPorSlug, resolverTag } from '@/servicios/tags';
@@ -92,6 +93,10 @@ export async function accionAlta(
       tagId: tagValido.tagId,
     });
   }
+
+  // Crea su tarjeta de wallet ya, para que el botón de guardarla aparezca
+  // en cuanto llegue a la pantalla siguiente.
+  sincronizarWalletPronto(local.localId);
 
   redirect(`/c/${local.localSlug}/tarjeta`);
 }

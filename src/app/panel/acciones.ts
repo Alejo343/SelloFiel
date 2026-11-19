@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 
 import { cerrarSesion, exigirSesion } from '@/lib/cookies-panel';
+import { sincronizarWalletPronto } from '@/lib/sincronizar-wallet';
 import { darDeBaja } from '@/servicios/clientes';
 import { obtenerClienteDelPanel, obtenerLocalDelPanel } from '@/servicios/panel';
 import { canjear, sumarSello } from '@/servicios/sellos';
@@ -38,6 +39,7 @@ export async function accionSumarSelloManual(datos: FormData): Promise<void> {
     usuarioLocalId: sesion.usuarioId,
   });
 
+  sincronizarWalletPronto(sesion.localId);
   redirect(`/panel/clientes/${cliente.id}`);
 }
 
@@ -60,6 +62,7 @@ export async function accionCanjear(datos: FormData): Promise<void> {
     usuarioLocalId: sesion.usuarioId,
   });
 
+  sincronizarWalletPronto(sesion.localId);
   redirect(`/panel/clientes/${cliente.id}`);
 }
 

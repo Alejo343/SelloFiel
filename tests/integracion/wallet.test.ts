@@ -422,3 +422,58 @@ describe('procesarCola filtrando por local', () => {
     expect(quedaPendiente[0].estado).toBe('pendiente');
   });
 });
+
+describe('un local que no emite pases no toca Google', () => {
+  it('no encola nada, ni siquiera como pendiente', async () => {
+    // Google NO permite borrar plantillas ni pases, así que un local de
+    // demostración o en prueba no debe dejar nada permanente en la cuenta.
+    const { locales } = await import('../../src/db/schema');
+    const demo = await crearLocalDePrueba(base.db);
+    await base.db
+      .update(locales)
+      .set({ emitePases: false })
+      .where(eq(locales.id, demo.localId));
+
+    const suCliente = await crearClienteDePrueba(base.db, demo.localId);
+
+    await encolar({ localId: demo.localId, tipo: 'crear_clase' }, base.db);
+    await encolar({ localId: demo.localId, clienteId: suCliente, tipo: 'crear_objeto' }, base.db);
+
+    const cola = await base.db
+      .select()
+      .from(colaWallet)
+      .where(eq(colaWallet.localId, demo.localId));
+
+    expect(cola).toHaveLength(0);
+  });
+
+  it('sus clientes siguen sumando sellos con normalidad', async () => {
+    // Lo único que pierde es el pase del wallet: todo lo demás funciona.
+    const { locales } = await import('../../src/db/schema');
+    const demo = await crearLocalDePrueba(base.db, { sellosObjetivo: 3 });
+    await base.db
+      .update(locales)
+      .set({ emitePases: false })
+      .where(eq(locales.id, demo.localId));
+
+    const suCliente = await crearClienteDePrueba(base.db, demo.localId);
+
+    const r = await sumarSello(
+      {
+        localId: demo.localId,
+        clienteId: suCliente,
+        sellosObjetivo: 3,
+        zonaHoraria: demo.zonaHoraria,
+        origen: 'nfc',
+        tagId: demo.tagId,
+        ahora: instante('2026-11-19'),
+      },
+      base.db,
+    );
+
+    expect(r.resultado).toBe('sumado');
+    if (r.resultado !== 'sumado') return;
+    expect(r.estado.sellos).toBe(1);
+    expect(emisor.llamadas).toHaveLength(0);
+  });
+});

@@ -67,6 +67,9 @@ async function sembrar() {
       .values({
         slug: 'la-esquina',
         nombre: 'La Esquina',
+        // Local de demostración: no debe dejar plantillas imborrables en la
+        // cuenta de Google Wallet.
+        emitePases: false,
         // Google Wallet exige logo para crear la plantilla del local.
         logoUrl: 'https://ejemplo.test/la-esquina-logo.png',
         colorPrimario: '#8b1e1e',
@@ -221,6 +224,7 @@ async function sembrar() {
       .values({
         slug: 'cafe-vecino',
         nombre: 'Café Vecino',
+        emitePases: false,
         logoUrl: 'https://ejemplo.test/cafe-vecino-logo.png',
         whatsapp: '573009998877',
         lat: '4.6600',

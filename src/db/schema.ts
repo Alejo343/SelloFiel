@@ -73,6 +73,18 @@ export const locales = pgTable('locales', {
    */
   zonaHoraria: text('zona_horaria').notNull().default('America/Bogota'),
   activo: boolean('activo').notNull().default(true),
+  /**
+   * Si este local emite tarjetas en Google Wallet.
+   *
+   * En false para locales de demostración o en periodo de prueba. El motivo no
+   * es estético: Google **no permite borrar** plantillas ni pases, así que
+   * cada local que emita deja algo permanente en la cuenta de emisor. Un local
+   * que quizá nunca llegue a ser cliente no debería dejar rastro imborrable.
+   *
+   * El resto del sistema funciona igual: suma sellos, manda mensajes y el
+   * cliente ve su tarjeta web. Lo único que no tiene es el pase del wallet.
+   */
+  emitePases: boolean('emite_pases').notNull().default(true),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
 });
 

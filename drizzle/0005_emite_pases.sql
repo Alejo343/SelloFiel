@@ -1,0 +1,1 @@
+ALTER TABLE "locales" ADD COLUMN "emite_pases" boolean DEFAULT true NOT NULL;

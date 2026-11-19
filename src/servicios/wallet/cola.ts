@@ -47,6 +47,21 @@ export async function encolar(
   },
   db: BaseDeDatos = dbPorDefecto,
 ): Promise<void> {
+  /**
+   * Un local que no emite pases ni siquiera entra en la cola.
+   *
+   * Se comprueba al encolar y no al procesar porque lo que hay que evitar es
+   * crear algo en Google, y lo que se crea en Google es imborrable. Mejor no
+   * tener nunca el trabajo pendiente que tener que acordarse de saltárselo.
+   */
+  const [local] = await db
+    .select({ emitePases: locales.emitePases })
+    .from(locales)
+    .where(eq(locales.id, opciones.localId))
+    .limit(1);
+
+  if (!local?.emitePases) return;
+
   await db
     .insert(colaWallet)
     .values({

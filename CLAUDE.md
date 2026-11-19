@@ -48,9 +48,16 @@ usa el emisor simulado, que registra lo que enviaría y devuelve enlaces con «s
 para que se note si alguno llega a producción. La implementación real está escrita según la
 documentación pero **no se ha probado contra la API de Google**: eso es la Fase 4B.
 
-Sumar un sello **encola**, no llama a Google: `npm run wallet:procesar` drena la cola y está
-pensado para un cron cada minuto. Google no tiene SLA y el tap tiene que responder en menos de
-1,5 s delante del cliente.
+Sumar un sello **encola**, no llama a Google en línea: el tap tiene que responder en menos de
+1,5 s delante del cliente y Google no tiene SLA. La cola se vacía por dos caminos:
+- `sincronizarWalletPronto()` usa `after()` de Next para empujar **justo después de enviar la
+  respuesta**, así la tarjeta del wallet queda al día en cosa de un segundo sin frenar el tap.
+- El cron `npm run wallet:procesar` (cada minuto) es la red de seguridad de lo que falle ahí.
+
+**`locales.emitePases`**: en false, ese local no encola nada hacia Google. Es para locales de
+demostración o en prueba, y el motivo no es estético: Google no permite borrar plantillas ni
+pases, así que un local que quizá nunca sea cliente dejaría basura permanente en la cuenta de
+emisor. Los locales de la semilla (`la-esquina`, `cafe-vecino`) lo tienen en false.
 
 Pantallas del cliente: `/t/[token]` (el tap), `/c/[slug]/alta`, `/c/[slug]/tarjeta`,
 `/c/[slug]/politica`. Panel del local: `/panel`, `/panel/entrar`, `/panel/clientes`,
