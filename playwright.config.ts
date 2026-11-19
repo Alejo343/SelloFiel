@@ -1,4 +1,24 @@
+import 'dotenv/config';
+
 import { defineConfig, devices } from '@playwright/test';
+
+/**
+ * Las pruebas de punta a punta usan su PROPIA base de datos.
+ *
+ * Antes usaban la misma que la aplicación en vivo, y como la siembra borra
+ * todas las tablas, cada corrida destruía los datos reales. Pasó de verdad el
+ * 2026-11-19: una corrida borró el cliente con el que David estaba probando
+ * el sistema a mano.
+ *
+ * Se asigna aquí, en la configuración, porque este archivo lo cargan tanto la
+ * preparación como cada proceso de prueba y el servidor que se levanta.
+ */
+const URL_BASE_E2E =
+  process.env.DATABASE_URL_E2E ??
+  process.env.DATABASE_URL_TEST ??
+  'postgres:///fidelizacion_test?host=/var/run/postgresql';
+
+process.env.DATABASE_URL = URL_BASE_E2E;
 
 /**
  * Pruebas de punta a punta.
@@ -48,6 +68,7 @@ export default defineConfig({
   ],
   webServer: {
     command: `npx next dev --port ${PUERTO}`,
+    env: { ...process.env, DATABASE_URL: URL_BASE_E2E },
     url: `http://127.0.0.1:${PUERTO}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

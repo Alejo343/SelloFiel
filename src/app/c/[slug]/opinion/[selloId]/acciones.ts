@@ -27,9 +27,17 @@ export async function accionOpinar(datos: FormData): Promise<void> {
 
   if (!resultado.ok) redirect(`/c/${slug}/tarjeta`);
 
-  if (calificacion === 'buena' && resultado.googleMapsUrl) {
-    redirect(resultado.googleMapsUrl);
-  }
-
+  /**
+   * Nunca se redirige a Google desde aquí, aunque la visita haya estado bien.
+   *
+   * Sacar al cliente a otro dominio desde dentro de una acción de servidor
+   * resultó frágil: al volver atrás, el navegador restaura la página desde su
+   * memoria y los botones quedan muertos, sin ningún error visible. Reportado
+   * en un celular real el 2026-11-19.
+   *
+   * Ahora se le lleva a una pantalla nuestra con un botón hacia Google. Es más
+   * robusto y además es mejor: el cliente entiende lo que va a pasar en vez de
+   * aparecer de golpe en Google Maps.
+   */
   redirect(`/c/${slug}/opinion/${selloId}?gracias=${calificacion}`);
 }

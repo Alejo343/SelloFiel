@@ -98,8 +98,32 @@ test('el cliente califica bien su visita y lo llevan a Google Maps', async ({ pa
 
   await page.getByRole('button', { name: /estuvo bien/i }).click();
 
-  // La semilla le pone al local un enlace de reseñas de Google.
-  await expect(page).toHaveURL(/maps\.google\.com|google\.com\/maps/);
+  // Se queda en NUESTRA página, con el enlace a Google como botón. Sacar al
+  // cliente a otro dominio desde la acción dejaba los botones muertos al
+  // volver atrás, en celulares reales.
+  await expect(page).toHaveURL(/gracias=buena/);
+  const resena = page.getByRole('link', { name: /reseña en google/i });
+  await expect(resena).toBeVisible();
+  await expect(resena).toHaveAttribute('href', /google/);
+  await expect(resena).toHaveAttribute('target', '_blank');
+});
+
+test('tras responder, los botones siguen vivos al volver atrás', async ({ page }) => {
+  // El fallo reportado: se respondía, se salía a Google, se volvía atrás y
+  // ningún botón respondía.
+  const selloId = await visitaDePrueba('Cliente Que Vuelve Atras', '2026-01-17');
+
+  await page.goto(`/c/la-esquina/opinion/${selloId}`);
+  await page.getByRole('button', { name: /estuvo bien/i }).click();
+  await expect(page).toHaveURL(/gracias=buena/);
+
+  await page.goBack();
+  await expect(page.getByRole('button', { name: /estuvo bien/i })).toBeVisible();
+
+  // Y ahora puede cambiar de opinión sin que nada se quede colgado.
+  await page.getByLabel(/qué pasó/i).fill('Pensándolo mejor, la sopa estaba fría');
+  await page.getByRole('button', { name: /enviar mi comentario/i }).click();
+  await expect(page).toHaveURL(/gracias=mala/);
 });
 
 test('una queja se queda con el dueño y NO va a Google', async ({ page }) => {

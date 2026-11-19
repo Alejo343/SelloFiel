@@ -46,6 +46,23 @@ export default async function PaginaOpinion({
       <main>
         <h1>¡Gracias, {visita.clienteNombre}!</h1>
         <p>Nos alegra. Te esperamos pronto en {visita.localNombre}.</p>
+
+        {visita.googleMapsUrl && (
+          <section>
+            <p>
+              ¿Nos ayudas con una reseña? A {visita.localNombre} le sirve muchísimo y te toma
+              un minuto.
+            </p>
+            <p>
+              {/* Un enlace normal, no una redirección desde el formulario: así
+                  volver atrás nunca deja la página inservible. */}
+              <a href={visita.googleMapsUrl} target="_blank" rel="noreferrer">
+                Dejar mi reseña en Google
+              </a>
+            </p>
+          </section>
+        )}
+
         <p>
           <Link href={`/c/${slug}/tarjeta`}>Ver mis sellos</Link>
         </p>

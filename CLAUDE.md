@@ -25,9 +25,18 @@ Dos trabajos programados, pensados para cron:
   vez al día** por la pregunta de después de la visita: con una sola corrida diaria, a quien
   viene por la tarde se le preguntaría al día siguiente.
 
-**Las pruebas de punta a punta usan el puerto 3012**, no el 3011 de producción. Compartirlo hacía
-que Playwright reutilizara el servidor en vivo y corriera contra la compilación desplegada en vez
-de contra el código recién escrito.
+**Las pruebas de punta a punta corren aisladas de producción, y no por gusto:**
+- Puerto **3012**, no el 3011 de producción. Compartirlo hacía que Playwright reutilizara el
+  servidor en vivo y probara la compilación desplegada en vez del código nuevo.
+- **Base de datos propia** (`DATABASE_URL_TEST`), fijada en `playwright.config.ts`. Antes usaban
+  la de la aplicación en vivo y, como la siembra borra todas las tablas, cada corrida destruía los
+  datos reales: el 2026-11-19 una corrida borró el cliente con el que David estaba probando a
+  mano. `tests/e2e/preparar.ts` se niega a sembrar si la base no termina en `_test`.
+
+**No redirigir a un dominio externo desde una acción de servidor.** Se hacía al calificar bien una
+visita (se saltaba a Google Maps) y en un celular real, al volver atrás, el navegador restauraba
+la página desde su memoria y **todos** los botones quedaban muertos, sin ningún error visible. Lo
+correcto es llevar a una pantalla propia con un enlace normal hacia fuera.
 
 Los mensajes no se duplican gracias a la **clave de ocasión** (`claveDeOcasion`): el trabajo corre
 a diario y la ventana de cumpleaños dura una semana, así que sin ella el cliente recibiría siete
