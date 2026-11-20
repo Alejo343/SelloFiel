@@ -298,6 +298,29 @@ pasa a costar efectivo. Y hay un punto abierto: en Colombia, emitir instrumentos
 prepagado **podría tocar regulación financiera**. Consultar con un abogado ANTES de construir
 nada.
 
+**Ruleta de premios (idea de David, 2026-11-20).** La versión que le contaron: el cliente deja una
+reseña en Google, gira una ruleta y recibe su premio como cupón de un solo uso en su tarjeta.
+
+**Esa versión NO se puede construir: viola las políticas de Google.** Google prohíbe
+expresamente ofrecer "pagos, descuentos, bienes o servicios gratuitos" a cambio de publicar una
+reseña, lo clasifica como manipulación de calificaciones y la consecuencia es que **las reseñas se
+eliminan**. Los sorteos atados a reseñas cuentan igual. Y el riesgo lo corre **el local**, no
+Sello Fiel: le estaríamos vendiendo una herramienta que puede costarle las reseñas que ya tiene.
+
+Remate práctico: **no hay forma de verificar que alguien dejó una reseña.** Google no ofrece una
+API para confirmar que un usuario concreto reseñó un negocio. Se asumiría todo el riesgo de la
+política sin poder siquiera exigir la condición.
+
+**La versión que sí se puede construir:** la ruleta premia **la visita**, no la reseña. Google
+permite expresamente premiar visitas mientras el premio no esté atado a dejar reseña. Y por
+separado, sin condición alguna, se invita a reseñar. Se conserva la gamificación (que los reels
+mencionaban como motor de repetición), se conserva el empujón a las reseñas, y nadie se juega su
+listado. Encaja con lo que ya existe: la pregunta de "¿cómo estuvo tu visita?" puede ser el
+disparador del giro.
+
+Fuente: [Contenido prohibido y restringido, política de contenido generado por usuarios de
+Maps](https://support.google.com/contributionpolicy/answer/7400114).
+
 **Punto abierto:** no sabemos si el acceso de publicación de Google se concede por tipo de pase o
 para toda la cuenta. Verificarlo antes de prometerle varios tipos a un local.
 
