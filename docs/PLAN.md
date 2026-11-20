@@ -274,6 +274,38 @@ es que estaban mal escritas y se arreglan.
 
 ---
 
+### Futuro — Más tipos de pase: cupones, membresías y tarjetas de regalo
+*Idea de David, 2026-11-20. Anotada para no perderla, pero deliberadamente fuera del orden
+actual.*
+
+Google Wallet soporta cuatro tipos de pase (`loyalty`, `offer`, `giftCard`, `generic`), se pueden
+guardar **varios con un solo botón**, y un pase genérico puede enlazar a otros para que se añadan
+solos. Así que la idea de "una sola tarjeta del local que lo lleve todo" es realizable.
+
+Pero no son tres funciones: son **tres productos con pesos muy distintos**.
+
+**Cupones (`offerObject`) — la extensión natural, y la primera.** Está a un paso de lo que ya
+existe: el local ya manda campañas, y un cupón es una campaña con algo canjeable. La mecánica
+nueva —que se use una sola vez— es exactamente el mismo trabajo que el antifraude de la Fase 6,
+así que conviene hacerlo justo después y reaprovecharlo.
+
+**Membresías (`genericObject`) — otro negocio.** Implican cobro recurrente: pasarela de pagos,
+renovaciones, impagos, vencimientos. No es difícil, pero es un dominio entero que hoy no existe.
+
+**Tarjetas de regalo (`giftCardObject`) — la más arriesgada.** Ahí no se manejan sellos sino
+**dinero**: saldos, contabilidad, auditoría de cada movimiento. El fraude deja de costar un café y
+pasa a costar efectivo. Y hay un punto abierto: en Colombia, emitir instrumentos de valor
+prepagado **podría tocar regulación financiera**. Consultar con un abogado ANTES de construir
+nada.
+
+**Punto abierto:** no sabemos si el acceso de publicación de Google se concede por tipo de pase o
+para toda la cuenta. Verificarlo antes de prometerle varios tipos a un local.
+
+**Por qué va después y no ahora:** al 2026-11-20 no hay ningún local pagando, y el producto
+construido no lo ha usado un restaurante real ni una semana. Añadir tres productos antes de
+validar el primero multiplica lo que hay que mantener, vender y explicar. Las cuentas que
+inspiraron todo esto venden **una sola cosa**.
+
 ### Fase 10 — Cierre legal y comercial
 *Diferido a propósito: hace falta para firmar con un local real, no para que el sistema funcione.*
 
