@@ -12,6 +12,7 @@ import { notFound } from 'next/navigation';
 import { diaEnZona } from '@/dominio/fechas';
 import { fraseRetorno } from '@/dominio/metricas';
 import { exigirSesion } from '@/lib/cookies-panel';
+import { contarAlertas } from '@/servicios/antifraude';
 import { contarPendientes } from '@/servicios/mensajes';
 import { cumpleanosProximos, obtenerLocalDelPanel, resumenDelLocal } from '@/servicios/panel';
 
@@ -26,10 +27,11 @@ export default async function PaginaPanel() {
   const hoy = diaEnZona(new Date(), local.zonaHoraria);
   const inicioDelMes = `${hoy.slice(0, 7)}-01`;
 
-  const [resumen, cumples, pendientes] = await Promise.all([
+  const [resumen, cumples, pendientes, alertas] = await Promise.all([
     resumenDelLocal(sesion.localId, { desde: inicioDelMes, hasta: hoy }),
     cumpleanosProximos(sesion.localId, hoy, local.diasAntesCumple),
     contarPendientes(sesion.localId),
+    contarAlertas(sesion.localId),
   ]);
 
   return (
@@ -51,6 +53,17 @@ export default async function PaginaPanel() {
           )}
         </ul>
       </section>
+
+      {alertas > 0 && (
+        <section>
+          <h2>Para revisar</h2>
+          <p>
+            <Link href="/panel/alertas">
+              Hay {alertas} {alertas === 1 ? 'cosa' : 'cosas'} que conviene que mires
+            </Link>
+          </p>
+        </section>
+      )}
 
       <section>
         <h2>Mensajes por enviar</h2>
@@ -97,7 +110,13 @@ export default async function PaginaPanel() {
             <Link href="/panel/programa">Configurar el club</Link>
           </li>
           <li>
+            <Link href="/panel/pantalla">Código para sumar sellos en la caja</Link>
+          </li>
+          <li>
             <Link href="/panel/qr">Códigos QR para imprimir</Link>
+          </li>
+          <li>
+            <Link href="/panel/alertas">Cosas para revisar ({alertas})</Link>
           </li>
         </ul>
       </nav>

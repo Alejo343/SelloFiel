@@ -35,7 +35,14 @@ export function calcularEstado(sellosDisponibles: number, objetivo: number): Est
 
 /* ------------------------------------------------------- sumar un sello */
 
-export type MotivoRechazo = 'ya_sumo_hoy' | 'tag_inactivo' | 'cliente_dado_de_baja';
+export type MotivoRechazo =
+  | 'ya_sumo_hoy'
+  | 'tag_inactivo'
+  | 'cliente_dado_de_baja'
+  /** RN-10: el tag es un QR impreso, que solo sirve para unirse al club */
+  | 'tag_no_suma'
+  /** RN-04: el chip repitió una lectura antigua */
+  | 'contador_repetido';
 
 export type DecisionSello =
   | { puede: true }
@@ -124,8 +131,17 @@ export function mensajeDelTap(resultado: ResultadoTap): string {
       return 'Ya sumaste tu visita de hoy. Vuelve mañana para sumar otro sello.';
 
     case 'rechazado':
-      return resultado.motivo === 'tag_inactivo'
-        ? 'Este código ya no está activo. Pídele ayuda al personal del local.'
-        : 'No pudimos sumar tu sello. Pídele ayuda al personal del local.';
+      switch (resultado.motivo) {
+        case 'tag_inactivo':
+          return 'Este código ya no está activo. Pídele ayuda al personal del local.';
+        case 'tag_no_suma':
+          // El QR impreso sirve para unirse, no para sumar: el sello lo da
+          // el personal. Decirlo claro evita que el cliente insista.
+          return 'Este código es para unirte al club. El sello te lo suma el personal del local.';
+        case 'contador_repetido':
+          return 'No pudimos validar ese toque. Pídele ayuda al personal del local.';
+        default:
+          return 'No pudimos sumar tu sello. Pídele ayuda al personal del local.';
+      }
   }
 }

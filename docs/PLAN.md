@@ -220,7 +220,7 @@ de prueba y con la anotación "[TEST ONLY]".
 
 ---
 
-### Fase 6 — Antifraude
+### Fase 6 — Antifraude ✅ terminada el 2026-11-20
 
 **Entregables**
 - **Separar los tags por tipo** (RN-10). Un QR impreso fijo pasa a servir SOLO para unirse al

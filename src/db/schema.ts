@@ -35,6 +35,22 @@ import {
 
 export const origenSello = pgEnum('origen_sello', ['nfc', 'qr', 'manual']);
 
+/**
+ * Qué puede hacer cada tag.
+ *
+ * La distinción es de seguridad, no de comodidad. Un QR impreso es una URL
+ * fija: el cliente la fotografía y suma sellos desde su casa. Un chip NTAG213
+ * tiene el mismo problema, aunque sea NFC, porque también guarda una URL fija.
+ *
+ *  - `qr_impreso`: SOLO sirve para unirse al club. Nunca suma sellos.
+ *  - `pantalla`: muestra un código de un solo uso y caducidad corta. Es la
+ *    versión en software de lo que hace el chip seguro.
+ *  - `nfc`: suma sellos al apoyarlo. Con un NTAG 424 DNA, cada toque trae un
+ *    contador distinto que se valida; con uno barato, la defensa es el sello
+ *    por día y las alertas.
+ */
+export const tipoTag = pgEnum('tipo_tag', ['nfc', 'qr_impreso', 'pantalla']);
+
 export const plataformaTarjeta = pgEnum('plataforma_tarjeta', ['google', 'apple']);
 
 export const tipoMensaje = pgEnum('tipo_mensaje', [
@@ -171,6 +187,7 @@ export const tags = pgTable(
       .references(() => locales.id, { onDelete: 'cascade' }),
     /** Lo que va en la URL /t/[token]. No debe ser adivinable (RNF-06). */
     token: text('token').notNull().unique(),
+    tipo: tipoTag('tipo').notNull().default('nfc'),
     /** UID del chip, cuando es NFC */
     uid: text('uid'),
     /** Dónde está: "media luna de la caja", "mesa 4" */
@@ -184,6 +201,45 @@ export const tags = pgTable(
     creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('tags_local_idx').on(t.localId)],
+);
+
+/* --------------------------------------------------------- codigos de uso */
+
+/**
+ * Códigos de un solo uso para los tags de pantalla (RN-11).
+ *
+ * El local tiene abierta una pantalla que pide un código nuevo cada pocos
+ * segundos y lo muestra como QR. El cliente lo escanea y el código se consume.
+ *
+ * Dos defensas a la vez, y hacen falta las dos:
+ *  - **Un solo uso**: una foto del código no sirve dos veces.
+ *  - **Caducidad corta**: y tampoco sirve más tarde, aunque nadie lo haya
+ *    usado. Sin esto, quien fotografía el código y se va puede usarlo de noche
+ *    desde su casa.
+ */
+export const codigosSello = pgTable(
+  'codigos_sello',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    localId: uuid('local_id')
+      .notNull()
+      .references(() => locales.id, { onDelete: 'cascade' }),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+    /** Lo que viaja en el QR. Aleatorio y no adivinable. */
+    codigo: text('codigo').notNull().unique(),
+    expiraEn: timestamp('expira_en', { withTimezone: true }).notNull(),
+    usadoEn: timestamp('usado_en', { withTimezone: true }),
+    usadoPorClienteId: uuid('usado_por_cliente_id').references(() => clientes.id, {
+      onDelete: 'set null',
+    }),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('codigos_sello_tag_idx').on(t.tagId, t.creadoEn),
+    index('codigos_sello_limpieza_idx').on(t.expiraEn),
+  ],
 );
 
 /* ----------------------------------------------------------------- sellos */
@@ -483,5 +539,7 @@ export type Mensaje = typeof mensajes.$inferSelect;
 export type UsuarioLocal = typeof usuariosLocal.$inferSelect;
 export type Tarjeta = typeof tarjetas.$inferSelect;
 export type ItemColaWallet = typeof colaWallet.$inferSelect;
+export type CodigoSello = typeof codigosSello.$inferSelect;
+export type AlertaFraude = typeof alertasFraude.$inferSelect;
 export type Plantilla = typeof plantillas.$inferSelect;
 export type Opinion = typeof opiniones.$inferSelect;

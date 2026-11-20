@@ -15,11 +15,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { puedeSumarSellos } from '@/dominio/fraude';
 import { mensajeDelTap, type ResultadoTap } from '@/dominio/sellos';
 import { clienteDeLaCookie } from '@/lib/cookies-cliente';
 import { sincronizarWalletPronto } from '@/lib/sincronizar-wallet';
 import { obtenerCliente } from '@/servicios/clientes';
-import { sumarSello } from '@/servicios/sellos';
+import { estadoDelClub, sumarSello } from '@/servicios/sellos';
 import { resolverTag } from '@/servicios/tags';
 
 import { Tarjeta } from '../../c/[slug]/tarjeta/tarjeta';
@@ -70,13 +71,26 @@ export default async function PaginaTap({ params }: PageProps<'/t/[token]'>) {
     );
   }
 
-  const resultado = await procesarTap({
-    localId: tag.localId,
-    clienteId: cliente.id,
-    sellosObjetivo: tag.sellosObjetivo,
-    zonaHoraria: tag.zonaHoraria,
-    tagId: tag.tagId,
-  });
+  /**
+   * RN-10: un QR impreso NO suma sellos.
+   *
+   * Es una URL fija pegada en una pared: el cliente la fotografía y sumaría
+   * desde su casa. Sirve para unirse al club, y el sello lo da el personal.
+   */
+  const resultado: ResultadoTap = puedeSumarSellos(tag.tagTipo)
+    ? await procesarTap({
+        localId: tag.localId,
+        clienteId: cliente.id,
+        sellosObjetivo: tag.sellosObjetivo,
+        zonaHoraria: tag.zonaHoraria,
+        tagId: tag.tagId,
+      })
+    : {
+        tipo: 'sello_sumado',
+        estado: await estadoDelClub(cliente.id, tag.sellosObjetivo),
+      };
+
+  const soloUnirse = !puedeSumarSellos(tag.tagTipo);
 
   // El cliente puede abrir su wallet ahora mismo: que lo encuentre al día.
   if (resultado.tipo === 'sello_sumado') sincronizarWalletPronto(tag.localId);
@@ -85,7 +99,10 @@ export default async function PaginaTap({ params }: PageProps<'/t/[token]'>) {
     <main>
       <h1>{tag.localNombre}</h1>
       <p>
-        Hola, {cliente.nombre}. {mensajeDelTap(resultado)}
+        Hola, {cliente.nombre}.{' '}
+        {soloUnirse
+          ? 'Ya estás en el club. El sello de esta visita te lo suma el personal.'
+          : mensajeDelTap(resultado)}
       </p>
 
       {'estado' in resultado && (

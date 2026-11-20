@@ -14,8 +14,20 @@ Los reels originales con sus transcripciones están en
 
 ## Estado
 
-Fases 0 a 3, **4A** y **5** terminadas. Siguiente: **Fase 6 — antifraude**, donde además hay que
-rediseñar los mecanismos de identificación (ver el QR copiable en `docs/REQUISITOS.md` §6).
+Fases 0 a 3, **4A**, **5** y **6** terminadas. Siguiente: **Fase 7 — NFC físico** (comprar chips,
+grabarlos y probarlos), o la **Fase 8 — diseño**, que es la primera que toca los estilos.
+
+**Tres tipos de tag, y la diferencia es de seguridad** (`tags.tipo`):
+- `qr_impreso`: SOLO sirve para unirse al club. **Nunca suma sellos**: es una URL fija pegada a
+  una pared, y el cliente la fotografía. Es el único tipo que aparece en la página de imprimir.
+- `pantalla`: el local deja `/panel/pantalla` abierta en la caja y muestra un QR que se renueva.
+  Cada código vale **una vez** y **caduca en segundos**. Hacen falta las dos cosas: un solo uso
+  impide reutilizarlo, la caducidad impide usarlo más tarde si nadie más lo usó.
+- `nfc`: suma al apoyar. Con un NTAG 424 DNA se valida el contador de lecturas; con uno barato la
+  defensa es el sello por día más las alertas.
+
+**Un NTAG213 NO es más seguro que un QR impreso**: también guarda una URL fija. Solo el NTAG 424
+DNA, que emite un código distinto en cada toque, lo resuelve de raíz.
 
 310 pruebas en verde: 157 unitarias, 124 de integración y 29 de punta a punta en móvil simulado.
 

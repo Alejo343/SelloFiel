@@ -16,6 +16,8 @@ import type { BaseDeDatos } from './tipos';
 export interface TagResuelto {
   tagId: string;
   tagActivo: boolean;
+  /** Decide si este tag puede sumar sellos o solo sirve para unirse (RN-10) */
+  tagTipo: 'nfc' | 'qr_impreso' | 'pantalla';
   objeto: string | null;
   ultimoContador: number | null;
   localId: string;
@@ -47,6 +49,7 @@ export async function resolverTag(
     .select({
       tagId: tags.id,
       tagActivo: tags.activo,
+      tagTipo: tags.tipo,
       objeto: tags.objeto,
       ultimoContador: tags.ultimoContador,
       localId: locales.id,
@@ -78,6 +81,40 @@ export async function resolverTag(
   return resuelto;
 }
 
+type LocalResuelto = Omit<TagResuelto, 'tagId' | 'tagActivo' | 'tagTipo' | 'objeto' | 'ultimoContador'>;
+
+/** El local al que pertenece un código de pantalla ya consumido. */
+export async function resolverLocalPorId(
+  localId: string,
+  db: BaseDeDatos = dbPorDefecto,
+): Promise<LocalResuelto | null> {
+  const filas = await db
+    .select({
+      localId: locales.id,
+      localSlug: locales.slug,
+      localNombre: locales.nombre,
+      zonaHoraria: locales.zonaHoraria,
+      whatsapp: locales.whatsapp,
+      googleMapsUrl: locales.googleMapsUrl,
+      localActivo: locales.activo,
+      sellosObjetivo: programas.sellosObjetivo,
+      premio: programas.premio,
+      beneficioBienvenida: programas.beneficioBienvenida,
+      semanasInactividad: programas.semanasInactividad,
+      diasAntesCumple: programas.diasAntesCumple,
+    })
+    .from(locales)
+    .innerJoin(programas, eq(programas.localId, locales.id))
+    .where(eq(locales.id, localId))
+    .limit(1);
+
+  const fila = filas[0];
+  if (!fila || !fila.localActivo) return null;
+
+  const { localActivo: _descartado, ...resuelto } = fila;
+  return resuelto;
+}
+
 /**
  * Lo mismo pero a partir del slug del local, para el QR impreso y los enlaces
  * /c/[slug] que no pasan por un tag concreto.
@@ -85,7 +122,7 @@ export async function resolverTag(
 export async function resolverLocalPorSlug(
   slug: string,
   db: BaseDeDatos = dbPorDefecto,
-): Promise<Omit<TagResuelto, 'tagId' | 'tagActivo' | 'objeto' | 'ultimoContador'> | null> {
+): Promise<Omit<TagResuelto, 'tagId' | 'tagActivo' | 'tagTipo' | 'objeto' | 'ultimoContador'> | null> {
   const filas = await db
     .select({
       localId: locales.id,

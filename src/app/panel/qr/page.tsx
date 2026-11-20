@@ -38,8 +38,16 @@ export default async function PaginaQr() {
   const local = await obtenerLocalDelPanel(sesion.localId);
   if (!local) notFound();
 
+  /**
+   * SOLO se imprimen los tags de tipo `qr_impreso`.
+   *
+   * Imprimir el QR de un chip NFC o de una pantalla sería recrear el agujero
+   * que cierra la Fase 6: su URL suma sellos, y pegada en una pared cualquiera
+   * la fotografía y suma desde su casa. Un QR impreso solo sirve para unirse
+   * al club (RN-10), y por eso es el único que tiene sentido imprimir.
+   */
   const tags = await listarTags(sesion.localId);
-  const activos = tags.filter((t) => t.activo);
+  const activos = tags.filter((t) => t.activo && t.tipo === 'qr_impreso');
 
   const codigos = await Promise.all(
     activos.length > 0
@@ -70,6 +78,14 @@ export default async function PaginaQr() {
         código va en un lugar distinto del local.
       </p>
 
+      <p className="sin-imprimir">
+        <small>
+          Estos códigos sirven para que el cliente <strong>se una al club</strong>, no para sumar
+          sellos. El sello lo da el personal con el chip, o con el código de la caja que cambia
+          solo. Un código impreso que sumara sellos se podría fotografiar y usar desde casa.
+        </small>
+      </p>
+
       {codigos.map((codigo) => (
         <section key={codigo.url} className="hoja-qr">
           <h2>{codigo.titulo}</h2>
@@ -90,8 +106,9 @@ export default async function PaginaQr() {
 
       {activos.length === 0 && (
         <p className="sin-imprimir">
-          Este local todavía no tiene chips NFC dados de alta, así que se muestra el código
-          general. El alta de chips llega en la Fase 7.
+          Este local todavía no tiene códigos impresos dados de alta, así que se muestra el
+          general, que lleva al formulario para unirse. El alta de códigos y chips llega en la
+          Fase 7.
         </p>
       )}
     </main>

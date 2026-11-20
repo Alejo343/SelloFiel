@@ -100,8 +100,25 @@ async function sembrar() {
     const [tagCaja, tagMesa] = await db
       .insert(tags)
       .values([
-        { localId: esquina.id, token: 'tag-esquina-caja', objeto: 'Media luna de la caja' },
-        { localId: esquina.id, token: 'tag-esquina-mesa4', objeto: 'QR de la mesa 4' },
+        {
+          localId: esquina.id,
+          token: 'tag-esquina-caja',
+          objeto: 'Media luna de la caja',
+          tipo: 'nfc' as const,
+        },
+        {
+          // Un QR impreso NO suma sellos: solo sirve para unirse (RN-10).
+          localId: esquina.id,
+          token: 'tag-esquina-mesa4',
+          objeto: 'QR impreso de la mesa 4',
+          tipo: 'qr_impreso' as const,
+        },
+        {
+          localId: esquina.id,
+          token: 'tag-esquina-pantalla',
+          objeto: 'Pantalla de la caja',
+          tipo: 'pantalla' as const,
+        },
       ])
       .returning();
 

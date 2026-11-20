@@ -210,12 +210,15 @@ test('genera los códigos QR del local', async ({ page }) => {
   await entrarAlPanel(page);
   await page.goto('/panel/qr');
 
-  // Un QR por tag activo: la semilla tiene dos en La Esquina. Se acota a las
-  // hojas del QR porque el servidor de desarrollo inyecta su propio SVG.
-  await expect(page.locator('.hoja-qr')).toHaveCount(2);
-  await expect(page.locator('.hoja-qr svg')).toHaveCount(2);
-  await expect(page.getByText(/media luna de la caja/i)).toBeVisible();
+  // Solo se imprimen los tags de tipo qr_impreso: la semilla tiene uno. Los
+  // del chip y la pantalla NO se imprimen, porque su URL suma sellos y
+  // pegada en una pared se podría fotografiar.
+  await expect(page.locator('.hoja-qr')).toHaveCount(1);
   await expect(page.getByText(/mesa 4/i)).toBeVisible();
+  await expect(page.getByText(/media luna de la caja/i)).toHaveCount(0);
+  await expect(page.getByText(/pantalla de la caja/i)).toHaveCount(0);
+  // Y se dice para qué sirven, para que nadie los use mal.
+  await expect(page.getByText(/se una al club/i)).toBeVisible();
 });
 
 test('salir cierra la sesión', async ({ page }) => {

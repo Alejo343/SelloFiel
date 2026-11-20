@@ -378,7 +378,14 @@ export async function actualizarLocal(
 /** Los tags del local, para la página del QR y el alta de chips (RF-30). */
 export async function listarTags(localId: string, db: BaseDeDatos = dbPorDefecto) {
   return db
-    .select({ id: tags.id, token: tags.token, objeto: tags.objeto, activo: tags.activo })
+    .select({
+      id: tags.id,
+      token: tags.token,
+      objeto: tags.objeto,
+      activo: tags.activo,
+      tipo: tags.tipo,
+      ultimoContador: tags.ultimoContador,
+    })
     .from(tags)
     .where(eq(tags.localId, localId))
     .orderBy(tags.creadoEn);

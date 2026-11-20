@@ -94,8 +94,8 @@ lo que se diseñe tiene que pasar ese filtro.
 | RN-07 | El mensaje de post-visita se dispara **2 horas** después del sello | 5 |
 | RN-08 | Un cliente dado de baja nunca entra en ninguna selección de mensajes | 5 |
 | RN-09 | Las alertas de fraude **avisan, no bloquean** | 6 |
-| RN-10 | Un **QR impreso fijo NO puede sumar sellos**: solo sirve para unirse al club. El sello exige un mecanismo que no se pueda copiar con una foto | 6 |
-| RN-11 | Para locales sin NFC, el sello por QR exige un **código rotativo** mostrado en el local, válido unos segundos | 6 |
+| RN-10 | Un **QR impreso fijo NO puede sumar sellos**: solo sirve para unirse al club. El sello exige un mecanismo que no se pueda copiar con una foto | 6 ✅ |
+| RN-11 | Para locales sin NFC, el sello por QR exige un **código rotativo** mostrado en el local: de **un solo uso** y con **caducidad corta**. Las dos cosas: un solo uso impide reutilizarlo, la caducidad impide usarlo más tarde si nadie más lo usó | 6 ✅ |
 
 ---
 
