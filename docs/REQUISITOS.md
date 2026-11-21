@@ -212,6 +212,16 @@ Verificadas el 2026-11-10. Condicionan lo que se le puede prometer a un local.
 
 ---
 
+## 6 bis. Riesgos aceptados
+
+**Filtro de reseñas (RF-28) — decisión de David, 2026-11-21.** El flujo invita a dejar reseña en
+Google solo a quien dijo que la visita estuvo bien; las quejas se quedan con el dueño. Es lo que
+venden los reels y es un argumento comercial central. Se le advirtió que esa práctica (*review
+gating*) probablemente choca con las políticas de Google, que piden no solicitar reseñas de forma
+selectiva, y que el riesgo lo corre el listado del local. Decidió mantenerlo. **No cambiarlo sin
+que él lo pida.** La alternativa, si algún día hace falta: que la queja llegue primero al dueño,
+pero invitar a todos a Google sin filtrar.
+
 ## 7. Fuera de alcance
 
 Para que no se confunda con lo que hace Menuly, que es un producto más grande:
