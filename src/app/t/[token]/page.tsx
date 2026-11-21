@@ -15,6 +15,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { MarcoLocal } from '@/componentes/marca-local';
 import { puedeSumarSellos } from '@/dominio/fraude';
 import { mensajeDelTap, type ResultadoTap } from '@/dominio/sellos';
 import { clienteDeLaCookie } from '@/lib/cookies-cliente';
@@ -38,19 +39,21 @@ export default async function PaginaTap({ params }: PageProps<'/t/[token]'>) {
   // por el teléfono si ya estaba (RF-13).
   if (!clienteId) {
     return (
-      <main>
-        <h1>{tag.localNombre}</h1>
-        <p>{mensajeDelTap({ tipo: 'cliente_nuevo' })}</p>
-        <p>
-          Suma sellos cada vez que vengas. Al llegar a {tag.sellosObjetivo}:{' '}
-          <strong>{tag.premio}</strong>.
-        </p>
-        <p>
-          <Link href={`/c/${tag.localSlug}/alta?t=${encodeURIComponent(token)}`}>
+      <MarcoLocal local={tag}>
+        <div className="aviso">{mensajeDelTap({ tipo: 'cliente_nuevo' })}</div>
+        <div className="hoja">
+          <p>
+            Suma sellos cada vez que vengas. Al llegar a {tag.sellosObjetivo}:{' '}
+            <strong>{tag.premio}</strong>.
+          </p>
+          <Link
+            className="boton boton--local"
+            href={`/c/${tag.localSlug}/alta?t=${encodeURIComponent(token)}`}
+          >
             Unirme al club
           </Link>
-        </p>
-      </main>
+        </div>
+      </MarcoLocal>
     );
   }
 
@@ -59,15 +62,17 @@ export default async function PaginaTap({ params }: PageProps<'/t/[token]'>) {
   const cliente = await obtenerCliente(tag.localId, clienteId);
   if (!cliente) {
     return (
-      <main>
-        <h1>{tag.localNombre}</h1>
-        <p>No pudimos encontrar tu tarjeta. Vuelve a unirte al club, es rápido.</p>
-        <p>
-          <Link href={`/c/${tag.localSlug}/alta?t=${encodeURIComponent(token)}`}>
-            Unirme al club
-          </Link>
-        </p>
-      </main>
+      <MarcoLocal local={tag}>
+        <div className="aviso">
+          No pudimos encontrar tu tarjeta. Vuelve a unirte al club, es rápido.
+        </div>
+        <Link
+          className="boton boton--local"
+          href={`/c/${tag.localSlug}/alta?t=${encodeURIComponent(token)}`}
+        >
+          Unirme al club
+        </Link>
+      </MarcoLocal>
     );
   }
 
@@ -95,10 +100,18 @@ export default async function PaginaTap({ params }: PageProps<'/t/[token]'>) {
   // El cliente puede abrir su wallet ahora mismo: que lo encuentre al día.
   if (resultado.tipo === 'sello_sumado') sincronizarWalletPronto(tag.localId);
 
+  // El aviso cambia de tono según lo que pasó: verde si sumó, neutro si ya
+  // había sumado hoy, rojo si algo impidió el sello.
+  const claseAviso =
+    resultado.tipo === 'rechazado'
+      ? 'aviso aviso--error'
+      : resultado.tipo === 'sello_sumado' && !soloUnirse
+        ? 'aviso aviso--exito'
+        : 'aviso';
+
   return (
-    <main>
-      <h1>{tag.localNombre}</h1>
-      <p>
+    <MarcoLocal local={tag}>
+      <p className={claseAviso} role="status">
         Hola, {cliente.nombre}.{' '}
         {soloUnirse
           ? 'Ya estás en el club. El sello de esta visita te lo suma el personal.'
@@ -113,7 +126,7 @@ export default async function PaginaTap({ params }: PageProps<'/t/[token]'>) {
           localNombre={tag.localNombre}
         />
       )}
-    </main>
+    </MarcoLocal>
   );
 }
 

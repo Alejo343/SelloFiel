@@ -14,8 +14,28 @@ Los reels originales con sus transcripciones están en
 
 ## Estado
 
-Fases 0 a 3, **4A**, **5** y **6** terminadas. Siguiente: **Fase 7 — NFC físico** (comprar chips,
-grabarlos y probarlos), o la **Fase 8 — diseño**, que es la primera que toca los estilos.
+Fases 0 a 3, **4A**, **5**, **6** y **8** terminadas. Pendientes: **Fase 7 — NFC físico** (David
+está comprando los chips), 9 y 10.
+
+**Diseño (Fase 8).** Mismo sistema que sellofiel.app: papel crema, azul marino, coral, Fraunces para
+títulos e Inter para texto, servidas desde nuestro dominio con `next/font`. Dos identidades:
+- **Panel**: marca Sello Fiel (`MarcoPanel`, barra azul).
+- **Pantallas del cliente**: marca **del local** (`MarcoLocal`), con su logo y su color. Sello Fiel
+  solo firma al pie. Es la promesa de que cada local tiene su tarjeta propia.
+
+El color lo elige el dueño y puede ser cualquiera, así que **nunca se usa crudo**: pasa por
+`temaDelLocal()` (`src/dominio/color.ts`), que elige texto claro u oscuro según el contraste WCAG y
+oscurece el acento hasta que se lea. El acento se calcula contra el fondo **más oscuro**
+(`FONDO_PAPEL`), que es el peor caso; calcularlo contra el crema dejaba enlaces en 4,26 a 1.
+
+`tests/e2e/accesibilidad.spec.ts` audita con axe todas las pantallas y exige cero violaciones
+graves de WCAG 2.1 AA, incluido con colores de local extremos (amarillo pálido, menta, casi negro).
+`node scripts/capturas.mjs [carpeta]` saca capturas de todas las pantallas en móvil, contra la base
+de pruebas; con `COLOR_LOCAL=#ffe066` prueba otro color. **En diseño, mirar las capturas**: las
+pruebas dicen si funciona, no si se ve bien.
+
+**Nunca mostrar números de fase al usuario** ("llega en la Fase 7"). Son jerga interna y además
+quedan desactualizados.
 
 **Tres tipos de tag, y la diferencia es de seguridad** (`tags.tipo`):
 - `qr_impreso`: SOLO sirve para unirse al club. **Nunca suma sellos**: es una URL fija pegada a

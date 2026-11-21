@@ -9,7 +9,11 @@ export function FormularioEntrar() {
 
   return (
     <form action={accion}>
-      {estado.error && <p className="error">{estado.error}</p>}
+      {estado.error && (
+        <p className="error" role="alert">
+          {estado.error}
+        </p>
+      )}
 
       <div className="campo">
         <label htmlFor="email">Correo</label>

@@ -8,9 +8,9 @@
  * sesión: pedir el id de un cliente de otro local da 404, no sus datos.
  */
 
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { MarcoPanel } from '@/componentes/marco-panel';
 import { calcularEstado } from '@/dominio/sellos';
 import { formatearParaMostrar } from '@/dominio/telefono';
 import { exigirSesion } from '@/lib/cookies-panel';
@@ -31,28 +31,41 @@ export default async function PaginaCliente({ params }: PageProps<'/panel/client
   const estado = calcularEstado(cliente.sellosDisponibles, local.sellosObjetivo);
 
   return (
-    <main>
-      <p>
-        <Link href="/panel/clientes">← Volver a mis clientes</Link>
-      </p>
+    <MarcoPanel
+      localNombre={local.nombre}
+      volver={{ href: '/panel/clientes', texto: 'Volver a mis clientes' }}
+    >
+      <div className="pila">
+        <h1>{cliente.nombre}</h1>
+        {estado.premioDisponible && (
+          <span className="etiqueta etiqueta--verde">Premio disponible</span>
+        )}
+        {cliente.dadoDeBaja && <span className="etiqueta">Pidió no recibir más mensajes</span>}
+      </div>
 
-      <h1>{cliente.nombre}</h1>
-
-      <ul>
-        <li>WhatsApp: {formatearParaMostrar(cliente.telefono)}</li>
-        <li>Cumpleaños: {cliente.fechaNacimiento ?? 'no lo dio'}</li>
-        <li>
-          Sellos: {estado.sellos} de {estado.objetivo}
-          {estado.premioDisponible && ' — premio disponible'}
+      <ul className="lista">
+        <li className="fila">
+          <span className="fila__meta">Sellos</span>
+          <span className="fila__titulo">
+            Sellos: {estado.sellos} de {estado.objetivo}
+            {estado.premioDisponible && ' — premio disponible'}
+          </span>
         </li>
-        <li>Visitas totales: {cliente.visitasTotales}</li>
-        <li>Última visita: {cliente.ultimoSello ?? 'nunca'}</li>
-        <li>En el club desde: {cliente.creadoEn.toISOString().slice(0, 10)}</li>
-        {cliente.dadoDeBaja && <li>Pidió no recibir más mensajes</li>}
+        <li className="fila">
+          <span className="fila__meta">Contacto</span>
+          <span>WhatsApp: {formatearParaMostrar(cliente.telefono)}</span>
+          <span>Cumpleaños: {cliente.fechaNacimiento ?? 'no lo dio'}</span>
+        </li>
+        <li className="fila">
+          <span className="fila__meta">Historial</span>
+          <span>Visitas totales: {cliente.visitasTotales}</span>
+          <span>Última visita: {cliente.ultimoSello ?? 'nunca'}</span>
+          <span>En el club desde: {cliente.creadoEn.toISOString().slice(0, 10)}</span>
+        </li>
       </ul>
 
       {estado.premioDisponible ? (
-        <section>
+        <section className="hoja">
           <h2>Entregar el premio</h2>
           <p>
             Tiene derecho a: <strong>{local.premio}</strong>
@@ -63,9 +76,9 @@ export default async function PaginaCliente({ params }: PageProps<'/panel/client
           </form>
         </section>
       ) : (
-        <section>
+        <section className="hoja">
           <h2>Sumar un sello a mano</h2>
-          <p>
+          <p className="ayuda">
             Para cuando el chip falla. Si ya sumó hoy, no se suma otro: la regla de un sello por
             día se aplica igual que con el chip.
           </p>
@@ -77,19 +90,21 @@ export default async function PaginaCliente({ params }: PageProps<'/panel/client
       )}
 
       {!cliente.dadoDeBaja && (
-        <section>
+        <section className="hoja">
           <h2>Baja de los mensajes</h2>
-          <p>
+          <p className="ayuda">
             Si el cliente pide que no le escriban más. Sus sellos se mantienen y puede seguir
             usando su tarjeta.
           </p>
           <form action={accionDarDeBaja}>
             <input type="hidden" name="clienteId" value={cliente.id} />
-            <button type="submit">No enviarle más mensajes</button>
+            <button type="submit" className="boton--secundario">
+              No enviarle más mensajes
+            </button>
           </form>
         </section>
       )}
-    </main>
+    </MarcoPanel>
   );
 }
 

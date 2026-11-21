@@ -2,10 +2,10 @@
  * Los textos de los mensajes: /panel/plantillas (RF-25)
  */
 
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { MARCADORES, type TipoMensaje } from '@/dominio/mensajes';
+import { MarcoPanel } from '@/componentes/marco-panel';
 import { exigirSesion } from '@/lib/cookies-panel';
 import { plantillasDelLocal } from '@/servicios/mensajes';
 import { obtenerLocalDelPanel } from '@/servicios/panel';
@@ -45,30 +45,33 @@ export default async function PaginaPlantillas({ searchParams }: PageProps<'/pan
   const textos = await plantillasDelLocal(sesion.localId);
 
   return (
-    <main>
-      <p>
-        <Link href="/panel/mensajes">← Volver a los mensajes</Link>
-      </p>
+    <MarcoPanel localNombre={local.nombre} volver={{ href: '/panel/mensajes', texto: 'Volver a los mensajes' }}>
 
       <h1>Textos de los mensajes</h1>
 
-      {guardado && <p>Textos guardados.</p>}
-      {typeof error === 'string' && <p className="error">{error}</p>}
+      {guardado && <p className="aviso aviso--exito">Textos guardados.</p>}
+      {typeof error === 'string' && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
 
-      <p>
-        Puedes usar estos marcadores, que se reemplazan por los datos de cada cliente:
-      </p>
-      <ul>
-        {Object.entries(MARCADORES).map(([clave, descripcion]) => (
-          <li key={clave}>
-            <code>{`{${clave}}`}</code> — {descripcion}
-          </li>
-        ))}
-      </ul>
+      <section className="hoja">
+        <p className="ayuda">
+          Puedes usar estos marcadores, que se reemplazan por los datos de cada cliente:
+        </p>
+        <ul className="lista">
+          {Object.entries(MARCADORES).map(([clave, descripcion]) => (
+            <li key={clave}>
+              <code>{`{${clave}}`}</code> — {descripcion}
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <form action={accionGuardarPlantillas}>
         {CAMPOS.map((campo) => (
-          <div className="campo" key={campo.tipo}>
+          <div className="campo hoja" key={campo.tipo}>
             <label htmlFor={campo.tipo}>{campo.titulo}</label>
             <textarea id={campo.tipo} name={campo.tipo} rows={3} defaultValue={textos[campo.tipo]} />
             <small>{campo.ayuda}</small>
@@ -77,7 +80,7 @@ export default async function PaginaPlantillas({ searchParams }: PageProps<'/pan
 
         <button type="submit">Guardar textos</button>
       </form>
-    </main>
+    </MarcoPanel>
   );
 }
 

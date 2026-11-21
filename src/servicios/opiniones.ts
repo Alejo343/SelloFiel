@@ -19,6 +19,8 @@ export interface VisitaParaOpinar {
   clienteNombre: string;
   localNombre: string;
   googleMapsUrl: string | null;
+  logoUrl: string | null;
+  colorPrimario: string;
   /** Si el cliente ya opinó sobre esta visita */
   yaOpino: boolean;
 }
@@ -42,6 +44,8 @@ export async function visitaParaOpinar(
       clienteNombre: clientes.nombre,
       localNombre: locales.nombre,
       googleMapsUrl: locales.googleMapsUrl,
+      logoUrl: locales.logoUrl,
+      colorPrimario: locales.colorPrimario,
     })
     .from(sellos)
     .innerJoin(clientes, eq(sellos.clienteId, clientes.id))

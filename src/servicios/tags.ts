@@ -26,6 +26,9 @@ export interface TagResuelto {
   zonaHoraria: string;
   whatsapp: string | null;
   googleMapsUrl: string | null;
+  /** Para pintar las pantallas del cliente con la marca del local */
+  logoUrl: string | null;
+  colorPrimario: string;
   sellosObjetivo: number;
   premio: string;
   beneficioBienvenida: string | null;
@@ -58,6 +61,8 @@ export async function resolverTag(
       zonaHoraria: locales.zonaHoraria,
       whatsapp: locales.whatsapp,
       googleMapsUrl: locales.googleMapsUrl,
+      logoUrl: locales.logoUrl,
+      colorPrimario: locales.colorPrimario,
       localActivo: locales.activo,
       sellosObjetivo: programas.sellosObjetivo,
       premio: programas.premio,
@@ -96,6 +101,8 @@ export async function resolverLocalPorId(
       zonaHoraria: locales.zonaHoraria,
       whatsapp: locales.whatsapp,
       googleMapsUrl: locales.googleMapsUrl,
+      logoUrl: locales.logoUrl,
+      colorPrimario: locales.colorPrimario,
       localActivo: locales.activo,
       sellosObjetivo: programas.sellosObjetivo,
       premio: programas.premio,
@@ -131,6 +138,8 @@ export async function resolverLocalPorSlug(
       zonaHoraria: locales.zonaHoraria,
       whatsapp: locales.whatsapp,
       googleMapsUrl: locales.googleMapsUrl,
+      logoUrl: locales.logoUrl,
+      colorPrimario: locales.colorPrimario,
       localActivo: locales.activo,
       sellosObjetivo: programas.sellosObjetivo,
       premio: programas.premio,

@@ -258,7 +258,7 @@ Un tag físico pegado bajo una mesa suma un sello en los dos sistemas operativos
 
 ---
 
-### Fase 8 — Diseño
+### Fase 8 — Diseño ✅ terminada el 2026-11-21
 *Ahora sí.*
 
 **Entregables**

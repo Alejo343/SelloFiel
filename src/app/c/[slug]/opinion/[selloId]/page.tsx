@@ -13,6 +13,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { MarcoLocal } from '@/componentes/marca-local';
 import { visitaParaOpinar } from '@/servicios/opiniones';
 
 import { accionOpinar } from './acciones';
@@ -29,55 +30,57 @@ export default async function PaginaOpinion({
 
   if (gracias === 'mala') {
     return (
-      <main>
-        <h1>Gracias por contarnos</h1>
-        <p>
+      <MarcoLocal local={visita} titulo="Gracias por contarnos">
+        <p className="hoja">
           Lo sentimos. Le avisamos al equipo de {visita.localNombre} y van a querer arreglarlo.
         </p>
-        <p>
-          <Link href={`/c/${slug}/tarjeta`}>Ver mis sellos</Link>
-        </p>
-      </main>
+        <Link className="boton boton--secundario" href={`/c/${slug}/tarjeta`}>
+          Ver mis sellos
+        </Link>
+      </MarcoLocal>
     );
   }
 
   if (gracias === 'buena') {
     return (
-      <main>
-        <h1>¡Gracias, {visita.clienteNombre}!</h1>
-        <p>Nos alegra. Te esperamos pronto en {visita.localNombre}.</p>
+      <MarcoLocal local={visita} titulo={`¡Gracias, ${visita.clienteNombre}!`}>
+        <p className="texto-suave">Nos alegra. Te esperamos pronto en {visita.localNombre}.</p>
 
         {visita.googleMapsUrl && (
-          <section>
+          <section className="hoja">
             <p>
               ¿Nos ayudas con una reseña? A {visita.localNombre} le sirve muchísimo y te toma
               un minuto.
             </p>
-            <p>
-              {/* Un enlace normal, no una redirección desde el formulario: así
-                  volver atrás nunca deja la página inservible. */}
-              <a href={visita.googleMapsUrl} target="_blank" rel="noreferrer">
-                Dejar mi reseña en Google
-              </a>
-            </p>
+            {/* Un enlace normal, no una redirección desde el formulario: así
+                volver atrás nunca deja la página inservible. */}
+            <a
+              className="boton boton--local"
+              href={visita.googleMapsUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Dejar mi reseña en Google
+            </a>
           </section>
         )}
 
-        <p>
-          <Link href={`/c/${slug}/tarjeta`}>Ver mis sellos</Link>
-        </p>
-      </main>
+        <Link className="boton boton--secundario" href={`/c/${slug}/tarjeta`}>
+          Ver mis sellos
+        </Link>
+      </MarcoLocal>
     );
   }
 
   return (
-    <main>
-      <h1>{visita.localNombre}</h1>
-      <p>
+    <MarcoLocal local={visita}>
+      <p className="hoja">
         Hola, {visita.clienteNombre}. ¿Cómo estuvo tu visita?
       </p>
 
-      {visita.yaOpino && <p><small>Ya nos contaste, pero puedes cambiar tu respuesta.</small></p>}
+      {visita.yaOpino && (
+        <p className="ayuda">Ya nos contaste, pero puedes cambiar tu respuesta.</p>
+      )}
 
       <form action={accionOpinar}>
         <input type="hidden" name="slug" value={slug} />
@@ -86,7 +89,7 @@ export default async function PaginaOpinion({
         <button type="submit">Estuvo bien</button>
       </form>
 
-      <form action={accionOpinar}>
+      <form action={accionOpinar} className="hoja">
         <input type="hidden" name="slug" value={slug} />
         <input type="hidden" name="selloId" value={selloId} />
         <input type="hidden" name="calificacion" value="mala" />
@@ -97,9 +100,11 @@ export default async function PaginaOpinion({
           <small>Esto lo lee el dueño del local, no se publica en ningún lado.</small>
         </div>
 
-        <button type="submit">Enviar mi comentario</button>
+        <button type="submit" className="boton--secundario">
+          Enviar mi comentario
+        </button>
       </form>
-    </main>
+    </MarcoLocal>
   );
 }
 

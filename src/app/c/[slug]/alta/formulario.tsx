@@ -37,7 +37,11 @@ export function FormularioAlta({ slug, localNombre, token }: PropsFormulario) {
       <input type="hidden" name="slug" value={slug} />
       {token && <input type="hidden" name="token" value={token} />}
 
-      {errores.general && <p className="error">{errores.general}</p>}
+      {errores.general && (
+        <p className="error" role="alert">
+          {errores.general}
+        </p>
+      )}
 
       <div className="campo">
         <label htmlFor="nombre">Tu nombre</label>
@@ -94,7 +98,7 @@ export function FormularioAlta({ slug, localNombre, token }: PropsFormulario) {
         )}
       </div>
 
-      <div className="campo casilla">
+      <div className="campo casilla hoja">
         <input
           id="consentimiento"
           name="consentimiento"
@@ -111,7 +115,11 @@ export function FormularioAlta({ slug, localNombre, token }: PropsFormulario) {
         </label>
       </div>
 
-      {errores.consentimiento && <p className="error">{errores.consentimiento}</p>}
+      {errores.consentimiento && (
+        <p className="error" role="alert">
+          {errores.consentimiento}
+        </p>
+      )}
 
       <button type="submit" disabled={pendiente || !acepta}>
         {pendiente ? 'Un momento...' : 'Unirme al club'}

@@ -11,6 +11,7 @@
 
 import { notFound } from 'next/navigation';
 
+import { MarcoLocal } from '@/componentes/marca-local';
 import { NORMA_APLICABLE, seccionesPolitica, VERSION_CONSENTIMIENTO } from '@/lib/consentimiento';
 import { resolverLocalPorSlug } from '@/servicios/tags';
 
@@ -26,12 +27,11 @@ export default async function PaginaPolitica({ params }: PageProps<'/c/[slug]/po
   });
 
   return (
-    <main>
-      <h1>Tratamiento de datos personales</h1>
-      <p>Club de clientes de {local.localNombre}</p>
+    <MarcoLocal local={local} titulo="Tratamiento de datos personales">
+      <p className="texto-suave">Club de clientes de {local.localNombre}</p>
 
       {secciones.map((seccion) => (
-        <section key={seccion.titulo}>
+        <section key={seccion.titulo} className="hoja">
           <h2>{seccion.titulo}</h2>
           {seccion.cuerpo.map((parrafo) => (
             <p key={parrafo}>{parrafo}</p>
@@ -39,13 +39,10 @@ export default async function PaginaPolitica({ params }: PageProps<'/c/[slug]/po
         </section>
       ))}
 
-      <hr />
-      <p>
-        <small>
-          {NORMA_APLICABLE} Versión del texto: {VERSION_CONSENTIMIENTO}.
-        </small>
+      <p className="ayuda centrado">
+        {NORMA_APLICABLE} Versión del texto: {VERSION_CONSENTIMIENTO}.
       </p>
-    </main>
+    </MarcoLocal>
   );
 }
 

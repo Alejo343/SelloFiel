@@ -113,6 +113,27 @@ test('un código vencido no sirve aunque nadie lo haya usado', async ({ page }) 
   await expect(page.getByText(/el que esté en pantalla ahora/i)).toBeVisible();
 });
 
+test('un cliente nuevo que escanea la pantalla recibe la invitación a unirse', async ({
+  page,
+}) => {
+  // Antes le decía "ese código no es válido", que era falso: lo que le
+  // faltaba era unirse al club, y se quedaba sin saber qué hacer.
+  const codigo = await conBase(async (db) => {
+    const [local] = await db.select().from(locales).where(eq(locales.slug, 'la-esquina'));
+    const [tag] = await db.select().from(tags).where(eq(tags.token, 'tag-esquina-pantalla'));
+    return (await emitirCodigo(tag.id, local.id, db)).codigo;
+  });
+
+  await page.goto(`/s/${encodeURIComponent(codigo)}`);
+
+  await expect(page.getByText(/primero tienes que unirte al club/i)).toBeVisible();
+  await expect(page.getByText(/no es válido/i)).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /unirme al club/i })).toHaveAttribute(
+    'href',
+    '/c/la-esquina/alta',
+  );
+});
+
 test('un código inventado no suma nada', async ({ page }) => {
   await unirseAlClub(page, 'Cliente Curioso');
 

@@ -9,6 +9,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { MarcoPanel } from '@/componentes/marco-panel';
 import { diaEnZona } from '@/dominio/fechas';
 import { fraseRetorno } from '@/dominio/metricas';
 import { exigirSesion } from '@/lib/cookies-panel';
@@ -35,71 +36,65 @@ export default async function PaginaPanel() {
   ]);
 
   return (
-    <main>
+    <MarcoPanel>
       <h1>{local.nombre}</h1>
 
-      <section>
-        <h2>Este mes</h2>
-        <p>
-          <strong>Retorno de clientes:</strong> {fraseRetorno(resumen.retorno)}
-        </p>
-        <ul>
-          <li>Clientes en el club: {resumen.clientesTotales}</li>
-          <li>Nuevos este mes: {resumen.clientesNuevosEnPeriodo}</li>
-          <li>Sellos sumados este mes: {resumen.sellosEnPeriodo}</li>
-          <li>Premios entregados este mes: {resumen.canjesEnPeriodo}</li>
-          {resumen.sellosPorCanje !== null && (
-            <li>Sellos por premio entregado: {resumen.sellosPorCanje}</li>
-          )}
-        </ul>
+      {/* La métrica estrella, explicada en una frase: si el dueño no entiende
+          de dónde sale el número, no confía en él (RF-20). */}
+      <section className="destacado">
+        <p className="destacado__titulo">Retorno de clientes · este mes</p>
+        <p>{fraseRetorno(resumen.retorno)}</p>
       </section>
 
-      {alertas > 0 && (
-        <section>
-          <h2>Para revisar</h2>
-          <p>
-            <Link href="/panel/alertas">
-              Hay {alertas} {alertas === 1 ? 'cosa' : 'cosas'} que conviene que mires
-            </Link>
-          </p>
-        </section>
+      {/* Lo que hay que hacer hoy va antes que los números. */}
+      {pendientes > 0 && (
+        <Link href="/panel/mensajes" className="boton">
+          Tienes {pendientes} {pendientes === 1 ? 'mensaje' : 'mensajes'} por enviar
+        </Link>
       )}
 
-      <section>
-        <h2>Mensajes por enviar</h2>
-        {pendientes === 0 ? (
-          <p>Nada pendiente por ahora.</p>
-        ) : (
-          <p>
-            <strong>
-              <Link href="/panel/mensajes">
-                Tienes {pendientes} {pendientes === 1 ? 'mensaje' : 'mensajes'} por enviar
-              </Link>
-            </strong>
-          </p>
+      {alertas > 0 && (
+        <Link href="/panel/alertas" className="aviso aviso--error">
+          Hay {alertas} {alertas === 1 ? 'cosa' : 'cosas'} que conviene que mires
+        </Link>
+      )}
+
+      <section className="pila">
+        <h2>Este mes</h2>
+        <div className="metricas">
+          <Metrica etiqueta="Clientes en el club" valor={resumen.clientesTotales} />
+          <Metrica etiqueta="Nuevos este mes" valor={resumen.clientesNuevosEnPeriodo} />
+          <Metrica etiqueta="Sellos sumados" valor={resumen.sellosEnPeriodo} />
+          <Metrica etiqueta="Premios entregados" valor={resumen.canjesEnPeriodo} />
+        </div>
+        {resumen.sellosPorCanje !== null && (
+          <p className="ayuda">Sellos por premio entregado: {resumen.sellosPorCanje}</p>
         )}
       </section>
 
-      <section>
+      <section className="pila">
         <h2>Cumpleaños en los próximos {local.diasAntesCumple} días</h2>
         {cumples.length === 0 ? (
-          <p>Ninguno por ahora.</p>
+          <p className="vacio">Ninguno por ahora.</p>
         ) : (
-          <ul>
+          <ul className="lista">
             {cumples.map((c) => (
-              <li key={c.id}>
-                <Link href={`/panel/clientes/${c.id}`}>{c.nombre}</Link>{' '}
-                {c.faltan === 0 ? '— ¡hoy!' : `— en ${c.faltan} día${c.faltan === 1 ? '' : 's'}`}
+              <li key={c.id} className="fila">
+                <span className="fila__titulo">
+                  <Link href={`/panel/clientes/${c.id}`}>{c.nombre}</Link>
+                </span>
+                <span className="fila__meta">
+                  {c.faltan === 0 ? '¡Es hoy!' : `En ${c.faltan} día${c.faltan === 1 ? '' : 's'}`}
+                </span>
               </li>
             ))}
           </ul>
         )}
-
       </section>
 
-      <nav>
+      <nav className="pila" aria-label="Gestión">
         <h2>Gestión</h2>
-        <ul>
+        <ul className="menu-panel">
           <li>
             <Link href="/panel/clientes">Mis clientes ({resumen.clientesTotales})</Link>
           </li>
@@ -107,10 +102,10 @@ export default async function PaginaPanel() {
             <Link href="/panel/mensajes">Mensajes por enviar ({pendientes})</Link>
           </li>
           <li>
-            <Link href="/panel/programa">Configurar el club</Link>
+            <Link href="/panel/pantalla">Código para sumar sellos en la caja</Link>
           </li>
           <li>
-            <Link href="/panel/pantalla">Código para sumar sellos en la caja</Link>
+            <Link href="/panel/programa">Configurar el club</Link>
           </li>
           <li>
             <Link href="/panel/qr">Códigos QR para imprimir</Link>
@@ -122,9 +117,27 @@ export default async function PaginaPanel() {
       </nav>
 
       <form action={accionSalir}>
-        <button type="submit">Salir</button>
+        <button type="submit" className="boton--texto">
+          Salir
+        </button>
       </form>
-    </main>
+    </MarcoPanel>
+  );
+}
+
+/**
+ * Una métrica: número grande y etiqueta.
+ *
+ * El grupo lleva como nombre accesible la frase completa ("Clientes en el
+ * club: 6"), para que un lector de pantalla la lea entera en vez de soltar un
+ * número suelto y después su etiqueta.
+ */
+function Metrica({ etiqueta, valor }: { etiqueta: string; valor: number }) {
+  return (
+    <div className="metrica" role="group" aria-label={`${etiqueta}: ${valor}`}>
+      <span className="metrica__valor">{valor}</span>
+      <span className="metrica__etiqueta">{etiqueta}</span>
+    </div>
   );
 }
 

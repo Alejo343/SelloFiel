@@ -17,11 +17,26 @@ export default async function PaginaEntrar() {
   if (await sesionActual()) redirect('/panel');
 
   return (
-    <main>
-      <h1>Panel de Sello Fiel</h1>
-      <p>Entra para ver tus clientes y tus métricas.</p>
-      <FormularioEntrar />
-    </main>
+    <>
+      <div className="panel-barra">
+        <div className="panel-barra__interior">
+          <span className="panel-barra__marca">
+            Sello <em>Fiel</em>
+          </span>
+        </div>
+      </div>
+
+      <main className="pagina">
+        <div className="pila">
+          <h1>Panel de Sello Fiel</h1>
+          <p className="texto-suave">Entra para ver tus clientes y tus métricas.</p>
+        </div>
+
+        <div className="hoja">
+          <FormularioEntrar />
+        </div>
+      </main>
+    </>
   );
 }
 

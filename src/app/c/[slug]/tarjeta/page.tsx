@@ -9,6 +9,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { MarcoLocal } from '@/componentes/marca-local';
 import { clienteDeLaCookie } from '@/lib/cookies-cliente';
 import { obtenerCliente } from '@/servicios/clientes';
 import { estadoDelClub } from '@/servicios/sellos';
@@ -28,13 +29,12 @@ export default async function PaginaTarjeta({ params }: PageProps<'/c/[slug]/tar
 
   if (!cliente) {
     return (
-      <main>
-        <h1>Club de {local.localNombre}</h1>
-        <p>No reconocimos tu tarjeta en este celular.</p>
-        <p>
-          <Link href={`/c/${local.localSlug}/alta`}>Unirme al club</Link>
-        </p>
-      </main>
+      <MarcoLocal local={local} titulo={`Club de ${local.localNombre}`}>
+        <p className="aviso">No reconocimos tu tarjeta en este celular.</p>
+        <Link className="boton boton--local" href={`/c/${local.localSlug}/alta`}>
+          Unirme al club
+        </Link>
+      </MarcoLocal>
     );
   }
 
@@ -44,9 +44,8 @@ export default async function PaginaTarjeta({ params }: PageProps<'/c/[slug]/tar
   ]);
 
   return (
-    <main>
-      <h1>Club de {local.localNombre}</h1>
-      <p>Hola, {cliente.nombre}.</p>
+    <MarcoLocal local={local} titulo={`Club de ${local.localNombre}`}>
+      <p className="texto-suave">Hola, {cliente.nombre}.</p>
 
       <Tarjeta
         estado={estado}
@@ -56,7 +55,7 @@ export default async function PaginaTarjeta({ params }: PageProps<'/c/[slug]/tar
         whatsappLocal={local.whatsapp}
         enlaceWallet={enlaceWallet}
       />
-    </main>
+    </MarcoLocal>
   );
 }
 

@@ -1,5 +1,5 @@
 /**
- * El cliente escanea el código de la pantalla: /s/[codigo]
+ * El cliente escanea el código de la pantalla de la caja: /s/[codigo]
  *
  * Cada código vale UNA vez y caduca a los pocos segundos. Las dos cosas hacen
  * falta: un solo uso impide reutilizarlo, y la caducidad impide usarlo más
@@ -12,6 +12,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { MarcoLocal } from '@/componentes/marca-local';
 import { mensajeCodigoInvalido } from '@/dominio/fraude';
 import { mensajeDelTap, type ResultadoTap } from '@/dominio/sellos';
 import { clienteDeLaCookie } from '@/lib/cookies-cliente';
@@ -23,32 +24,60 @@ import { resolverLocalPorId } from '@/servicios/tags';
 
 import { Tarjeta } from '../../c/[slug]/tarjeta/tarjeta';
 
+type Local = NonNullable<Awaited<ReturnType<typeof resolverLocalPorId>>>;
+
+type Resultado =
+  | { tipo: 'codigo_invalido'; motivo: 'inexistente' | 'usado' | 'expirado' }
+  | { tipo: 'no_es_socio'; local: Local }
+  | {
+      tipo: 'procesado';
+      local: Local;
+      clienteNombre: string;
+      resultado: ResultadoTap;
+    };
+
 export default async function PaginaCodigo({ params }: PageProps<'/s/[codigo]'>) {
   const { codigo } = await params;
+  const r = await procesarCodigo(codigo);
 
-  /**
-   * Primero se mira el código SIN consumirlo, para saber de qué local es y
-   * poder reconocer al cliente. Consumirlo antes de saber quién lo escanea
-   * quemaría el código de un cliente que todavía no está en el club.
-   */
-  const previo = await consumirCodigoConCliente(codigo);
-
-  if (!previo.ok) {
+  if (r.tipo === 'codigo_invalido') {
+    // No se sabe de qué local es: el código no existe o ya no sirve.
     return (
-      <main>
+      <main className="pagina">
         <h1>No pudimos sumar tu sello</h1>
-        <p>{mensajeCodigoInvalido(previo.motivo)}</p>
+        <p className="aviso aviso--error">{mensajeCodigoInvalido(r.motivo)}</p>
       </main>
     );
   }
 
-  const { local, cliente, resultado } = previo;
+  if (r.tipo === 'no_es_socio') {
+    // Antes este caso decía "ese código no es válido", que era falso y dejaba
+    // al cliente sin saber qué hacer. Lo que le falta es unirse al club.
+    return (
+      <MarcoLocal local={r.local}>
+        <p className="aviso">
+          Para sumar sellos primero tienes que unirte al club. Es rápido, y después le pides al
+          personal que te muestre el código otra vez.
+        </p>
+        <Link className="boton boton--local" href={`/c/${r.local.localSlug}/alta`}>
+          Unirme al club
+        </Link>
+      </MarcoLocal>
+    );
+  }
+
+  const { local, clienteNombre, resultado } = r;
+  const claseAviso =
+    resultado.tipo === 'rechazado'
+      ? 'aviso aviso--error'
+      : resultado.tipo === 'sello_sumado'
+        ? 'aviso aviso--exito'
+        : 'aviso';
 
   return (
-    <main>
-      <h1>{local.localNombre}</h1>
-      <p>
-        Hola, {cliente.nombre}. {mensajeDelTap(resultado)}
+    <MarcoLocal local={local}>
+      <p className={claseAviso} role="status">
+        Hola, {clienteNombre}. {mensajeDelTap(resultado)}
       </p>
 
       {'estado' in resultado && (
@@ -59,44 +88,29 @@ export default async function PaginaCodigo({ params }: PageProps<'/s/[codigo]'>)
           localNombre={local.localNombre}
         />
       )}
-
-      <p>
-        <Link href={`/c/${local.localSlug}/tarjeta`}>Ver mi tarjeta</Link>
-      </p>
-    </main>
+    </MarcoLocal>
   );
 }
 
-type Previo =
-  | { ok: false; motivo: 'inexistente' | 'usado' | 'expirado' }
-  | {
-      ok: true;
-      local: NonNullable<Awaited<ReturnType<typeof resolverLocalPorId>>>;
-      cliente: NonNullable<Awaited<ReturnType<typeof obtenerCliente>>>;
-      resultado: ResultadoTap;
-    };
-
-async function consumirCodigoConCliente(codigo: string): Promise<Previo> {
-  // Se consume con cliente desconocido: lo importante es que nadie más pueda
-  // usar este código, aunque luego resulte que quien lo escaneó no está en
-  // el club. Un código quemado se reemplaza en segundos; uno reutilizable es
-  // un agujero permanente.
+/**
+ * Se consume el código ANTES de saber quién lo escanea, a propósito: lo que
+ * importa es que nadie más pueda usarlo. Si quien lo escaneó todavía no está
+ * en el club, pierde ese código; pero el siguiente ya está en pantalla, y un
+ * código quemado se reemplaza en segundos, mientras que uno reutilizable sería
+ * un agujero permanente.
+ */
+async function procesarCodigo(codigo: string): Promise<Resultado> {
   const consumo = await consumirCodigo(codigo, null);
-  if (!consumo.ok) return { ok: false, motivo: consumo.motivo };
+  if (!consumo.ok) return { tipo: 'codigo_invalido', motivo: consumo.motivo };
 
   const local = await resolverLocalPorId(consumo.localId);
   if (!local) notFound();
 
   const clienteId = await clienteDeLaCookie(local.localSlug, local.localId);
   const cliente = clienteId ? await obtenerCliente(local.localId, clienteId) : null;
+  if (!cliente) return { tipo: 'no_es_socio', local };
 
-  if (!cliente) {
-    // No está en el club: se le manda al alta. Pierde este código, pero el
-    // siguiente lo tiene en pantalla.
-    return { ok: false, motivo: 'inexistente' };
-  }
-
-  const resultado = await sumarSello({
+  const sumado = await sumarSello({
     localId: local.localId,
     clienteId: cliente.id,
     sellosObjetivo: local.sellosObjetivo,
@@ -105,7 +119,7 @@ async function consumirCodigoConCliente(codigo: string): Promise<Previo> {
     tagId: consumo.tagId,
   });
 
-  if (resultado.resultado === 'sumado') {
+  if (sumado.resultado === 'sumado') {
     sincronizarWalletPronto(local.localId);
 
     const horaLocal = Number(
@@ -116,25 +130,27 @@ async function consumirCodigoConCliente(codigo: string): Promise<Previo> {
       }).format(new Date()),
     );
 
-    await revisarSello({
-      localId: local.localId,
-      clienteId: cliente.id,
-      horaLocal,
-    }).catch(() => {
-      // Una alerta que falla nunca puede impedir un sello ya guardado.
-    });
+    // Una alerta que falla nunca puede impedir un sello ya guardado.
+    await revisarSello({ localId: local.localId, clienteId: cliente.id, horaLocal }).catch(
+      () => undefined,
+    );
 
-    return { ok: true, local, cliente, resultado: { tipo: 'sello_sumado', estado: resultado.estado } };
+    return {
+      tipo: 'procesado',
+      local,
+      clienteNombre: cliente.nombre,
+      resultado: { tipo: 'sello_sumado', estado: sumado.estado },
+    };
   }
 
   return {
-    ok: true,
+    tipo: 'procesado',
     local,
-    cliente,
+    clienteNombre: cliente.nombre,
     resultado:
-      resultado.motivo === 'ya_sumo_hoy'
-        ? { tipo: 'ya_sumo_hoy', estado: resultado.estado }
-        : { tipo: 'rechazado', motivo: resultado.motivo },
+      sumado.motivo === 'ya_sumo_hoy'
+        ? { tipo: 'ya_sumo_hoy', estado: sumado.estado }
+        : { tipo: 'rechazado', motivo: sumado.motivo },
   };
 }
 

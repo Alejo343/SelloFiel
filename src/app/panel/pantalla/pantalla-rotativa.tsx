@@ -55,7 +55,7 @@ export function PantallaRotativa({
   }, [pedirCodigo]);
 
   return (
-    <div>
+    <div className="pila centrado">
       {/* El QR se pide al servidor ya dibujado: así no hace falta una
           librería de QR en el navegador. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -65,11 +65,9 @@ export function PantallaRotativa({
         width={280}
         height={280}
       />
-      <p>
-        <small>
-          Se renueva cada {SEGUNDOS_DE_REFRESCO} segundos.
-          {error && ' Sin conexión: reintentando.'}
-        </small>
+      <p className="ayuda">
+        Se renueva cada {SEGUNDOS_DE_REFRESCO} segundos.
+        {error && ' Sin conexión: reintentando.'}
       </p>
     </div>
   );

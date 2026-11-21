@@ -94,8 +94,13 @@ test('el dueño entra y ve sus métricas', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'La Esquina' })).toBeVisible();
   await expect(page.getByText(/retorno de clientes/i)).toBeVisible();
 
+  // Se busca por el nombre accesible de la métrica, que es la frase completa
+  // que oye un lector de pantalla. Atarse al texto visual rompía la prueba
+  // con cualquier cambio de diseño sin que cambiara el dato.
   const esperados = await contarClientes('la-esquina');
-  await expect(page.getByText(`Clientes en el club: ${esperados}`)).toBeVisible();
+  await expect(
+    page.getByRole('group', { name: `Clientes en el club: ${esperados}` }),
+  ).toBeVisible();
   await expect(page.getByText(/cumpleaños en los próximos/i)).toBeVisible();
   // Carlos Cumple cumple en 3 días según la semilla.
   await expect(page.getByRole('link', { name: 'Carlos Cumple' })).toBeVisible();
@@ -170,7 +175,7 @@ test('cada dueño ve su propio local', async ({ page }) => {
   const suyos = await contarClientes('cafe-vecino');
   const delOtro = await contarClientes('la-esquina');
   expect(suyos).toBeLessThan(delOtro);
-  await expect(page.getByText(`Clientes en el club: ${suyos}`)).toBeVisible();
+  await expect(page.getByRole('group', { name: `Clientes en el club: ${suyos}` })).toBeVisible();
 });
 
 test('guarda la configuración del club', async ({ page }) => {

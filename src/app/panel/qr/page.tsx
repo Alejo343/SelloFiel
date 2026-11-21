@@ -11,10 +11,10 @@
  * local no tiene tags, se muestra el QR general del local, que lleva al alta.
  */
 
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import QRCode from 'qrcode';
 
+import { MarcoPanel } from '@/componentes/marco-panel';
 import { exigirSesion } from '@/lib/cookies-panel';
 import { listarTags, obtenerLocalDelPanel } from '@/servicios/panel';
 
@@ -66,10 +66,7 @@ export default async function PaginaQr() {
   );
 
   return (
-    <main>
-      <p className="sin-imprimir">
-        <Link href="/panel">← Volver al panel</Link>
-      </p>
+    <MarcoPanel localNombre={local.nombre} volver={{ href: '/panel', texto: 'Volver al panel' }}>
 
       <h1>{local.nombre}</h1>
 
@@ -107,11 +104,10 @@ export default async function PaginaQr() {
       {activos.length === 0 && (
         <p className="sin-imprimir">
           Este local todavía no tiene códigos impresos dados de alta, así que se muestra el
-          general, que lleva al formulario para unirse. El alta de códigos y chips llega en la
-          Fase 7.
+          general, que lleva al formulario para unirse.
         </p>
       )}
-    </main>
+    </MarcoPanel>
   );
 }
 

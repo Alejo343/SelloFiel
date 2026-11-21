@@ -1,100 +1,894 @@
 /*
- * Estilos mínimos, a propósito.
+ * Sistema de diseño de Sello Fiel.
  *
- * La Fase 8 es la del diseño. Hasta entonces esto solo hace que las pantallas
- * sean legibles en un celular, que es donde se usan. Nada de colores de marca
- * ni componentes: se diseñaría sobre suposiciones y habría que tirarlo.
+ * Los valores son los mismos de sellofiel.app, para que la landing, el panel y
+ * las tarjetas se sientan un solo producto.
+ *
+ * Dos identidades, a propósito:
+ *  - El PANEL lleva la marca Sello Fiel: es la herramienta del dueño.
+ *  - Las pantallas del CLIENTE llevan la marca DEL LOCAL, con su color en las
+ *    variables --local*. Sello Fiel solo firma al pie. Es la promesa de que
+ *    cada local tiene su tarjeta propia.
+ *
+ * Todo pensado para el celular, que es donde se usa (RNF-02): de pie, con una
+ * mano, a menudo con poca luz en un salón (RNF-12).
  */
 
+/* ------------------------------------------------------------- tokens */
+
 :root {
-  font-family: system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
+  --coral: #e4573d;
+  --coral-ink: #c8422a; /* texto blanco encima cumple AA */
+  --coral-ink-hover: #a93319;
+  /*
+   * Coral para TEXTO sobre el fondo de la página. El --coral-ink da 4,26 a 1
+   * sobre el papel y no llega al mínimo de 4,5; este sí.
+   */
+  --coral-texto: #a93319;
+  --coral-light: #ff8a6e;
+  --navy: #1f2a44;
+  --navy-soft: #2a3755;
+  --navy-deep: #172034;
+  --cream: #fbf5ec;
+  --paper: #f3eee5;
+  --muted: #5b6170;
+  --line: rgba(31, 42, 68, 0.12);
+  --verde: #1c7a3e;
+  --verde-suave: #e7f4eb;
+  --rojo: #b42318;
+  --rojo-suave: #fdecea;
+
+  --radius-sm: 12px;
+  --radius: 20px;
+  --radius-lg: 28px;
+  --shadow-sm: 0 2px 8px rgba(31, 42, 68, 0.06);
+  --shadow: 0 18px 40px -22px rgba(31, 42, 68, 0.35);
+
+  /* Las fuentes las inyecta next/font en el layout raíz. */
+  --display: var(--fuente-display), Georgia, 'Times New Roman', serif;
+  --sans: var(--fuente-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Tema del local por defecto: se sobrescribe en cada pantalla del cliente. */
+  --local: var(--navy);
+  --sobre-local: #ffffff;
+  --local-acento: var(--navy);
+  --local-suave: #e9ebf0;
 }
 
-* {
+/* --------------------------------------------------------------- base */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
-  padding: 1rem;
-  max-width: 34rem;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--navy);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
-main {
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 6vw, 2.2rem);
+}
+
+h2 {
+  font-size: 1.25rem;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--coral-texto);
+  text-underline-offset: 3px;
+}
+
+/* En las pantallas del cliente, los enlaces llevan el color del local, ya
+   ajustado para que se lea sobre el fondo. */
+.tema-local a:not(.boton) {
+  color: var(--local-acento);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* El foco se ve siempre que se navega con teclado, y nunca con el dedo. */
+:focus-visible {
+  outline: 3px solid var(--coral);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ------------------------------------------------------------- páginas */
+
+.pagina {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.1rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.pagina--ancha {
+  max-width: 46rem;
+}
+
+.pila {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.texto-suave {
+  color: var(--muted);
+}
+
+.texto-chico {
+  font-size: 0.875rem;
+}
+
+.centrado {
+  text-align: center;
+}
+
+/* --------------------------------------------------- cabecera del local */
+
+.marca-local {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.marca-local__logo {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  border-radius: 16px;
+  object-fit: cover;
+  background: var(--local);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Las iniciales están siempre debajo; el logo las tapa si carga. */
+.logo-local {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+}
+
+.logo-local__imagen {
+  position: absolute;
+  inset: 0;
+}
+
+.logo-local--fallo .logo-local__imagen {
+  display: none;
+}
+
+/* Si el local no subió logo, se muestran sus iniciales con su color. */
+.marca-local__iniciales {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--local);
+  color: var(--sobre-local);
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.marca-local__textos {
+  min-width: 0;
+}
+
+.marca-local__nombre {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.15;
+}
+
+.marca-local__sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* -------------------------------------------------------- superficies */
+
+.hoja {
+  background: var(--cream);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.aviso {
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  background: var(--local-suave);
+  color: var(--navy);
+  font-weight: 500;
+}
+
+.aviso--exito {
+  background: var(--verde-suave);
+  color: var(--verde);
+}
+
+.aviso--error,
+.error {
+  background: var(--rojo-suave);
+  color: var(--rojo);
+}
+
+.error {
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.85rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* --------------------------------------------------------------- botones */
+
+/*
+ * Objetivos táctiles de 52 px: se usan de pie y con una mano. WCAG pide 44;
+ * vamos por encima porque en un salón el pulso no es el de un escritorio.
+ */
+.boton,
+button {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.85rem 1.25rem;
+  border-radius: 999px;
+  background: var(--coral-ink);
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 10px 22px -12px rgba(200, 66, 42, 0.8);
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.boton:hover,
+button:hover {
+  background: var(--coral-ink-hover);
+}
+
+.boton:active,
+button:active {
+  transform: scale(0.985);
+}
+
+button:disabled,
+.boton[aria-disabled='true'] {
+  background: #c9c3b8;
+  color: #fff;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* En las pantallas del cliente, el botón principal lleva el color del local. */
+.boton--local,
+.tema-local button:not(.boton--secundario):not(.boton--texto) {
+  background: var(--local);
+  color: var(--sobre-local);
+  box-shadow: 0 10px 22px -12px var(--local);
+}
+
+.boton--local:hover,
+.tema-local button:not(.boton--secundario):not(.boton--texto):hover {
+  background: var(--local);
+  filter: brightness(0.92);
+}
+
+.tema-local button:disabled {
+  background: #c9c3b8;
+  color: #fff;
+  box-shadow: none;
+  filter: none;
+}
+
+.boton--secundario {
+  background: transparent;
+  color: var(--navy);
+  border: 1.5px solid var(--line);
+  box-shadow: none;
+}
+
+.boton--secundario:hover {
+  background: rgba(31, 42, 68, 0.05);
+}
+
+.boton--texto {
+  background: transparent;
+  color: var(--muted);
+  box-shadow: none;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.boton--texto:hover {
+  background: rgba(31, 42, 68, 0.05);
+}
+
+.boton--chico {
+  width: auto;
+  min-height: 40px;
+  padding: 0.45rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Fila de botones que se reparten el ancho. */
+.acciones {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.acciones > * {
+  flex: 1 1 8rem;
+}
+
+/* ------------------------------------------------------------ formularios */
+
+form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-/* Objetivos táctiles grandes: se usa de pie, con una mano, con poca luz. */
-input,
-button,
-select {
-  font: inherit;
-  padding: 0.75rem;
-  min-height: 3rem;
-  width: 100%;
-}
-
-button {
-  cursor: pointer;
-  font-weight: 600;
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 label {
-  display: block;
-  margin-bottom: 0.25rem;
   font-weight: 600;
+  font-size: 0.95rem;
 }
 
-.campo {
-  margin-bottom: 1rem;
+input,
+select,
+textarea {
+  font: inherit;
+  color: var(--navy);
+  width: 100%;
+  min-height: 52px;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--line);
+  background: #fff;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--local);
+  box-shadow: 0 0 0 4px var(--local-suave);
+}
+
+input[type='color'] {
+  padding: 0.3rem;
+  cursor: pointer;
+}
+
+.ayuda,
+.campo small {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
 }
 
 .casilla {
-  display: flex;
-  gap: 0.75rem;
+  flex-direction: row;
   align-items: flex-start;
+  gap: 0.8rem;
 }
 
 .casilla input {
   width: 1.5rem;
   min-height: 1.5rem;
-  flex-shrink: 0;
-  margin-top: 0.2rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+  accent-color: var(--local);
+  cursor: pointer;
 }
 
 .casilla label {
-  font-weight: normal;
+  font-weight: 500;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
-.error {
-  color: #b00020;
-  font-weight: 600;
+/* -------------------------------------------------- tarjeta de sellos */
+
+/*
+ * La tarjeta del cliente. Misma forma que la que muestra sellofiel.app, pero
+ * con el color del local: el cliente ve la marca de su restaurante.
+ */
+.tarjeta-sellos {
+  background: var(--cream);
+  border-radius: 24px;
+  padding: 1.25rem 1.2rem 1.35rem;
+  box-shadow: 0 22px 44px -26px rgba(31, 42, 68, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Una franja del color del local arriba, como el canto de una tarjeta. */
+.tarjeta-sellos::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 6px;
+  background: var(--local);
+}
+
+.tarjeta-sellos__cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tarjeta-sellos__cuenta {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--local-acento);
 }
 
 .sellos {
-  font-size: 2rem;
-  letter-spacing: 0.2rem;
-  word-break: break-all;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.6rem;
 }
 
-/* Página de códigos QR: una hoja por código al imprimir. */
+.sello {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px dashed rgba(31, 42, 68, 0.22);
+  background: rgba(31, 42, 68, 0.025);
+  display: grid;
+  place-items: center;
+}
+
+.sello svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sello__tinta-trazo {
+  stroke: var(--sobre-local, #fff);
+}
+
+.sello__tinta-relleno {
+  fill: var(--sobre-local, #fff);
+}
+
+.sello--lleno {
+  border: 0;
+  background: transparent;
+  color: var(--local);
+  animation: estampar 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+
+@keyframes estampar {
+  from {
+    transform: scale(0.4) rotate(-20deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.tarjeta-sellos__premio {
+  border-top: 1.5px dashed rgba(31, 42, 68, 0.18);
+  padding-top: 0.9rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.tarjeta-sellos__premio strong {
+  color: var(--navy);
+}
+
+/* Cuando ya hay premio, la tarjeta lo celebra con el color del local. */
+.tarjeta-sellos--premio .tarjeta-sellos__premio {
+  border-top-style: solid;
+  border-top-color: var(--local);
+  color: var(--navy);
+}
+
+/* ------------------------------------------------------- pie del cliente */
+
+.pie-sello-fiel {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.pie-sello-fiel a {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------- panel */
+
+.panel-barra {
+  background: var(--navy);
+  color: var(--cream);
+}
+
+.panel-barra__interior {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel-barra__marca {
+  color: var(--cream);
+  text-decoration: none;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.panel-barra__marca em {
+  font-style: normal;
+  color: var(--coral-light);
+}
+
+.panel-barra__local {
+  font-size: 0.85rem;
+  color: rgba(251, 245, 236, 0.75);
+  text-align: right;
+}
+
+.volver {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+.volver:hover {
+  color: var(--navy);
+}
+
+/* Las métricas del panel: número grande y una etiqueta. */
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.7rem;
+}
+
+.metrica {
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.metrica__valor {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.metrica__etiqueta {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+/* La métrica estrella, a todo el ancho. */
+.destacado {
+  background: var(--navy);
+  color: var(--cream);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.destacado__titulo {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--coral-light);
+}
+
+.destacado p {
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+/* Listas del panel: clientes, mensajes, alertas. */
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.fila {
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fila__titulo {
+  font-weight: 700;
+}
+
+.fila__titulo a {
+  color: var(--navy);
+  text-decoration: none;
+}
+
+.fila__titulo a:hover {
+  text-decoration: underline;
+}
+
+.fila__meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.fila__cita {
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.92rem;
+  font-style: normal;
+  border-left: 3px solid var(--coral);
+}
+
+.fila form {
+  gap: 0;
+}
+
+.etiqueta {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--muted);
+}
+
+.etiqueta--coral {
+  background: #fde7e2;
+  color: var(--coral-ink);
+}
+
+.etiqueta--verde {
+  background: var(--verde-suave);
+  color: var(--verde);
+}
+
+.menu-panel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.menu-panel a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  padding: 0.95rem 1rem;
+  color: var(--navy);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.menu-panel a:hover {
+  background: #fff;
+}
+
+.menu-panel a::after {
+  content: '→';
+  color: var(--muted);
+}
+
+.vacio {
+  text-align: center;
+  color: var(--muted);
+  padding: 1.5rem 1rem;
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+}
+
+code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--paper);
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+}
+
+/* ---------------------------------------------- vista previa del logo */
+
+.vista-logo img {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  object-fit: cover;
+  background: var(--paper);
+}
+
+/* El mensaje de error solo aparece si la imagen falló. */
+.vista-logo__error {
+  display: none;
+}
+
+.vista-logo--fallo img {
+  display: none;
+}
+
+.vista-logo--fallo .vista-logo__error {
+  display: block;
+}
+
+/* --------------------------------------------------- código de pantalla */
+
+.pantalla-qr {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  box-shadow: var(--shadow);
+}
+
+.pantalla-qr img {
+  width: min(78vw, 300px);
+  height: auto;
+}
+
+/* ------------------------------------------------------ hojas de QR */
+
+/* En pantalla se ven como tarjetas; al imprimir, una por página. */
+.hoja-qr {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.hoja-qr svg {
+  width: min(70vw, 260px);
+  height: auto;
+}
+
+/* ----------------------------------------------------------- impresión */
+
 @media print {
-  .sin-imprimir {
-    display: none;
+  body {
+    background: #fff;
+  }
+
+  .sin-imprimir,
+  .panel-barra {
+    display: none !important;
   }
 
   .hoja-qr {
     page-break-after: always;
     text-align: center;
+    box-shadow: none;
+    background: #fff;
   }
-}
 
-textarea {
-  font: inherit;
-  padding: 0.75rem;
-  width: 100%;
-  min-height: 5rem;
+  .hoja-qr svg {
+    width: 70%;
+    height: auto;
+    margin: 1rem auto;
+  }
 }
