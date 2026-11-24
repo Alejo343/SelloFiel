@@ -40,6 +40,12 @@ caracteres); los de la semilla (`tag-esquina-caja`) se adivinan y solo sirven pa
 David compró NTAG215 (2026-11-24): misma seguridad que el 213, una URL fija. Hay que **bloquearlos**
 en NFC Tools después de probarlos, o cualquiera con un celular podría reescribirlos.
 
+**Errores del navegador**: no dejan rastro en el servidor por sí solos. `PantallaError`
+(`error.tsx` y `global-error.tsx`) muestra una pantalla en español con "Reintentar" y envía el
+error a `/api/errores`, que lo escribe en el registro con el prefijo `[cliente]`. Para buscarlos:
+`sudo pm2 logs sellofiel --nostream --lines 200 | grep "\[cliente\]"`. Origen: el 2026-11-24 David
+vio la pantalla genérica de Next al enviar el alta y no había nada en los registros.
+
 **Nunca mostrar números de fase al usuario** ("llega en la Fase 7"). Son jerga interna y además
 quedan desactualizados.
 
