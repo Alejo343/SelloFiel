@@ -15,7 +15,7 @@
 import { and, asc, desc, eq, gte, isNull, lte, ne, sql } from 'drizzle-orm';
 
 import { db as dbPorDefecto } from '../db';
-import { clientes, locales, mensajes, plantillas, programas, sellos } from '../db/schema';
+import { campanas, clientes, locales, mensajes, plantillas, programas, sellos } from '../db/schema';
 import { diaEnZona, sumarDias, type Dia } from '../dominio/fechas';
 import { motivosParaEscribir } from '../dominio/inactividad';
 import {
@@ -309,9 +309,11 @@ export async function bandejaPendientes(
       clienteNombre: clientes.nombre,
       telefono: clientes.telefono,
       bajaEn: clientes.bajaEn,
+      campana: campanas.nombre,
     })
     .from(mensajes)
     .innerJoin(clientes, eq(mensajes.clienteId, clientes.id))
+    .leftJoin(campanas, eq(mensajes.campanaId, campanas.id))
     .where(and(eq(mensajes.localId, localId), eq(mensajes.estado, 'pendiente')))
     .orderBy(asc(mensajes.programadoPara))
     .limit(limite);
@@ -331,7 +333,7 @@ export async function bandejaPendientes(
         clienteNombre: f.clienteNombre,
         telefono: f.telefono,
         tipo: f.tipo,
-        motivo: motivoLegible(f.tipo),
+        motivo: f.campana ? `Campaña: ${f.campana}` : motivoLegible(f.tipo),
         texto: f.texto,
         enlace: enlaceWhatsApp(f.telefono, f.texto),
         programadoPara: f.programadoPara,

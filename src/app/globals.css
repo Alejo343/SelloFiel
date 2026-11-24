@@ -447,6 +447,23 @@ input[type='color'] {
   line-height: 1.45;
 }
 
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+legend {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.casilla input:disabled + label {
+  opacity: 0.6;
+}
+
 .casilla {
   flex-direction: row;
   align-items: flex-start;

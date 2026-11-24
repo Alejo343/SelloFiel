@@ -48,6 +48,14 @@ Al crear un local se genera la contraseña temporal del dueño, que **nunca viaj
 al historial y a los registros del servidor web): vuelve en el estado de la acción. El dueño queda
 obligado a cambiarla (`usuarios_local.debe_cambiar_contrasena`) antes de usar su panel.
 
+**Campañas (`/panel/campanas`)**: el dueño elige un grupo (`src/dominio/segmentos.ts`) y escribe el
+texto una vez; se crea un mensaje pendiente por cliente en la bandeja, con `mensajes.campana_id` y
+clave `campana:<id>` (dos campañas iguales son dos envíos). No envía nada sola. Quien pidió la baja
+no entra en ningún grupo, ni en "todos".
+
+**Exportar (`/panel/exportar`)**: CSV con `;`, BOM y CRLF para que Excel en español lo abra bien;
+`celdaSegura()` neutraliza celdas que empiezan con `= + - @` (inyección de fórmulas).
+
 **Errores del navegador**: no dejan rastro en el servidor por sí solos. `PantallaError`
 (`error.tsx` y `global-error.tsx`) muestra una pantalla en español con "Reintentar" y envía el
 error a `/api/errores`, que lo escribe en el registro con el prefijo `[cliente]`. Para buscarlos:

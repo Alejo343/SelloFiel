@@ -57,6 +57,13 @@
       "when": 1795553243171,
       "tag": "0007_administradores",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795555879372,
+      "tag": "0008_campanas",
+      "breakpoints": true
     }
   ]
 }

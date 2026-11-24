@@ -342,7 +342,9 @@ inspiraron todo esto venden **una sola cosa**.
 
 ### Fase 9 — Lo que lo hace vendible
 
-- Campañas masivas segmentadas ("Día de la pizza").
+- ✅ Campañas masivas segmentadas ("Día de la pizza"): `/panel/campanas`. Cinco grupos (todos,
+  frecuentes, perdidos, con premio, cumplen este mes); deja un mensaje por cliente en la bandeja
+  con clave `campana:<id>`. Quien pidió la baja nunca entra. 2026-11-24.
 - Multi-sucursal con tarjeta compartida entre locales del mismo dueño.
 - Panel de dueño sobre varias sucursales.
 - ✅ Exportar la base de clientes (`/panel/exportar`, CSV para Excel, con la fecha y versión del

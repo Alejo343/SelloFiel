@@ -102,6 +102,9 @@ export default async function PaginaPanel() {
             <Link href="/panel/mensajes">Mensajes por enviar ({pendientes})</Link>
           </li>
           <li>
+            <Link href="/panel/campanas">Campañas: un mensaje para muchos</Link>
+          </li>
+          <li>
             <Link href="/panel/chips">Chips y códigos</Link>
           </li>
           <li>

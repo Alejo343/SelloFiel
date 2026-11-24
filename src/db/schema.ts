@@ -390,6 +390,37 @@ export const plantillas = pgTable(
   (t) => [unique('plantillas_local_tipo_unico').on(t.localId, t.tipo)],
 );
 
+/* ---------------------------------------------------------------- campañas */
+
+/**
+ * Un envío masivo que arma el dueño: "Día de la milanesa" a los que se
+ * perdieron (RF-31).
+ *
+ * No envía nada por sí sola: al crearla se deja un mensaje pendiente por
+ * destinatario en la bandeja, con la clave `campana:<id>`, y el local los
+ * dispara como los demás. Se guarda el texto SIN resolver y el segmento para
+ * poder mostrar después qué se mandó y a quién.
+ */
+export const campanas = pgTable(
+  'campanas',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    localId: uuid('local_id')
+      .notNull()
+      .references(() => locales.id, { onDelete: 'cascade' }),
+    nombre: text('nombre').notNull(),
+    segmento: text('segmento').notNull(),
+    texto: text('texto').notNull(),
+    /** Cuántos mensajes se crearon al lanzarla */
+    destinatarios: integer('destinatarios').notNull(),
+    usuarioLocalId: uuid('usuario_local_id').references(() => usuariosLocal.id, {
+      onDelete: 'set null',
+    }),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('campanas_local_idx').on(t.localId, t.creadoEn)],
+);
+
 /* ---------------------------------------------------------------- mensajes */
 
 /**
@@ -419,6 +450,8 @@ export const mensajes = pgTable(
      * `bienvenida` (uno en la vida).
      */
     clave: text('clave').notNull(),
+    /** La campaña que lo originó, si vino de una (RF-31) */
+    campanaId: uuid('campana_id').references(() => campanas.id, { onDelete: 'cascade' }),
     /** Texto ya resuelto, con los marcadores reemplazados */
     texto: text('texto').notNull(),
     estado: estadoMensaje('estado').notNull().default('pendiente'),
