@@ -13,7 +13,7 @@ import { and, desc, eq, max } from 'drizzle-orm';
 
 import { db as dbPorDefecto } from '../db';
 import { esViolacionUnica } from '../db/errores';
-import { sellos, tags } from '../db/schema';
+import { sellos, sucursales, tags } from '../db/schema';
 import type { TipoTag } from '../dominio/fraude';
 import type { BaseDeDatos } from './tipos';
 
@@ -37,6 +37,8 @@ export interface ChipDelPanel {
   objeto: string | null;
   tipo: TipoTag;
   activo: boolean;
+  sucursalId: string;
+  sucursalNombre: string;
   ultimoContador: number | null;
   /** Último sello sumado con este tag. Null si nunca se usó. */
   ultimoUso: Date | null;
@@ -61,11 +63,14 @@ export async function listarChips(
       objeto: tags.objeto,
       tipo: tags.tipo,
       activo: tags.activo,
+      sucursalId: tags.sucursalId,
+      sucursalNombre: sucursales.nombre,
       ultimoContador: tags.ultimoContador,
       ultimoUso: usos.ultimoUso,
       creadoEn: tags.creadoEn,
     })
     .from(tags)
+    .innerJoin(sucursales, eq(tags.sucursalId, sucursales.id))
     .leftJoin(usos, eq(usos.tagId, tags.id))
     .where(eq(tags.localId, localId))
     .orderBy(desc(tags.activo), desc(tags.creadoEn));
@@ -83,9 +88,18 @@ export async function obtenerChip(
 }
 
 export async function crearChip(
-  datos: { localId: string; objeto: string; tipo: TipoTag },
+  datos: { localId: string; sucursalId: string; objeto: string; tipo: TipoTag },
   db: BaseDeDatos = dbPorDefecto,
 ): Promise<{ id: string; token: string }> {
+  // La sede llega de un formulario: tiene que ser una sede de ESTE local.
+  if (!/^[0-9a-f-]{36}$/i.test(datos.sucursalId)) throw new Error('Sucursal inválida');
+  const [sede] = await db
+    .select({ id: sucursales.id })
+    .from(sucursales)
+    .where(and(eq(sucursales.id, datos.sucursalId), eq(sucursales.localId, datos.localId)))
+    .limit(1);
+  if (!sede) throw new Error('La sucursal no es de este local');
+
   // El token es único en toda la tabla. Una colisión con 96 bits al azar es
   // prácticamente imposible, pero si pasara se reintenta en vez de fallar.
   for (let intento = 0; intento < 3; intento += 1) {
@@ -94,6 +108,7 @@ export async function crearChip(
         .insert(tags)
         .values({
           localId: datos.localId,
+          sucursalId: sede.id,
           objeto: datos.objeto.trim(),
           tipo: datos.tipo,
           token: generarToken(),
@@ -144,4 +159,26 @@ export async function renombrarChip(
 export function direccionDelChip(token: string): string {
   const base = process.env.URL_PUBLICA ?? 'http://localhost:3011';
   return `${base}/t/${token}`;
+}
+
+/** Pasar un chip a otra sede del mismo local (se mudó de caja). */
+export async function moverChip(
+  localId: string,
+  chipId: string,
+  sucursalId: string,
+  db: BaseDeDatos = dbPorDefecto,
+): Promise<boolean> {
+  if (!/^[0-9a-f-]{36}$/i.test(sucursalId)) return false;
+  const [sede] = await db
+    .select({ id: sucursales.id })
+    .from(sucursales)
+    .where(and(eq(sucursales.id, sucursalId), eq(sucursales.localId, localId)))
+    .limit(1);
+  if (!sede) return false;
+  const filas = await db
+    .update(tags)
+    .set({ sucursalId: sede.id })
+    .where(and(eq(tags.id, chipId), eq(tags.localId, localId)))
+    .returning({ id: tags.id });
+  return filas.length > 0;
 }

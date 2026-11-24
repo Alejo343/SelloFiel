@@ -12,8 +12,9 @@ import { MarcoPanel } from '@/componentes/marco-panel';
 import { exigirSesion } from '@/lib/cookies-panel';
 import { direccionDelChip, obtenerChip } from '@/servicios/chips';
 import { obtenerLocalDelPanel } from '@/servicios/panel';
+import { listarSucursales } from '@/servicios/sucursales';
 
-import { accionCambiarEstado, accionRenombrar } from '../acciones';
+import { accionCambiarEstado, accionMoverChip, accionRenombrar } from '../acciones';
 import { BotonCopiar } from '../copiar';
 import { NOMBRE_TIPO } from '../tipos';
 
@@ -33,6 +34,7 @@ export default async function PaginaChip({
   if (!chip) notFound();
 
   const direccion = direccionDelChip(chip.token);
+  const sedes = (await listarSucursales(sesion.localId)).filter((s) => s.activa || s.id === chip.sucursalId);
 
   return (
     <MarcoPanel
@@ -42,6 +44,7 @@ export default async function PaginaChip({
       <div className="pila">
         <h1>{chip.objeto ?? 'Sin nombre'}</h1>
         <span className="etiqueta">{NOMBRE_TIPO[chip.tipo]}</span>
+        {sedes.length > 1 && <span className="etiqueta">Sucursal {chip.sucursalNombre}</span>}
         {!chip.activo && <span className="etiqueta etiqueta--coral">Dado de baja</span>}
       </div>
 
@@ -117,6 +120,26 @@ export default async function PaginaChip({
           Cambiar nombre
         </button>
       </form>
+
+      {sedes.length > 1 && (
+        <form action={accionMoverChip} className="hoja">
+          <div className="campo">
+            <label htmlFor="sucursalId">Sucursal</label>
+            <select id="sucursalId" name="sucursalId" defaultValue={chip.sucursalId}>
+              {sedes.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.nombre}
+                </option>
+              ))}
+            </select>
+            <small>Los sellos que sume este chip cuentan para esa sucursal.</small>
+          </div>
+          <input type="hidden" name="chipId" value={chip.id} />
+          <button type="submit" className="boton--secundario">
+            Cambiar de sucursal
+          </button>
+        </form>
+      )}
 
       <form action={accionCambiarEstado} className="hoja">
         <input type="hidden" name="chipId" value={chip.id} />

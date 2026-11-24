@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { cerrarSesionAdmin, exigirAdmin, iniciarSesionAdmin } from '@/lib/cookies-admin';
 import { cambiarEstadoChip, crearChip } from '@/servicios/chips';
+import { resolverSucursalElegida } from '@/servicios/sucursales';
 import {
   autenticarAdmin,
   cambiarActivoLocal,
@@ -116,7 +117,8 @@ export async function accionCrearChipAdmin(datos: FormData): Promise<void> {
   const objeto = String(datos.get('objeto') ?? '').trim();
   const tipo = String(datos.get('tipo') ?? 'nfc');
   if (objeto.length >= 2 && (tipo === 'nfc' || tipo === 'qr_impreso' || tipo === 'pantalla')) {
-    await crearChip({ localId, objeto, tipo });
+    const sucursalId = await resolverSucursalElegida(localId, String(datos.get('sucursalId') ?? ''));
+    if (sucursalId) await crearChip({ localId, sucursalId, objeto, tipo });
   }
   // Sin "#chips" al final: con solo el ancla distinta, Next lo toma como
   // un salto dentro de la misma página y no vuelve a pedir los datos, así que

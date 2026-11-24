@@ -132,6 +132,7 @@ try {
     ['14-panel-programa', '/panel/programa'],
     ['15-panel-pantalla', '/panel/pantalla'],
     ['16-panel-campanas', '/panel/campanas'],
+    ['17-panel-sucursales', '/panel/sucursales'],
   ]) {
     await pagina.goto(`${BASE}${ruta}`, { waitUntil: 'networkidle' });
     await pagina.screenshot({ path: `${SALIDA}/${nombre}.png`, fullPage: true });

@@ -345,8 +345,12 @@ inspiraron todo esto venden **una sola cosa**.
 - ✅ Campañas masivas segmentadas ("Día de la pizza"): `/panel/campanas`. Cinco grupos (todos,
   frecuentes, perdidos, con premio, cumplen este mes); deja un mensaje por cliente en la bandeja
   con clave `campana:<id>`. Quien pidió la baja nunca entra. 2026-11-24.
-- Multi-sucursal con tarjeta compartida entre locales del mismo dueño.
-- Panel de dueño sobre varias sucursales.
+- ✅ Multi-sucursal con tarjeta compartida (`/panel/sucursales`). El "local" es la marca; cada
+  sede tiene su ubicación y su ficha de Google Maps. Un sello por día vale para la marca entera.
+  2026-11-24.
+- ✅ Panel de dueño sobre varias sucursales: sellos del mes por sede en la portada; chips,
+  pantalla de caja, sello manual y canje eligen sede cuando hay más de una.
+- Pendiente: usuarios por sede (encargado que solo ve la suya) y campañas por sede.
 - ✅ Exportar la base de clientes (`/panel/exportar`, CSV para Excel, con la fecha y versión del
   consentimiento de cada uno; celdas con fórmulas neutralizadas). 2026-11-24.
 - Página de venta y material para mostrar en los locales.

@@ -7,10 +7,10 @@
  * no llevan al cliente, nos llevan a nosotros directamente".
  */
 
-import { and, desc, eq, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, isNull } from 'drizzle-orm';
 
 import { db as dbPorDefecto } from '../db';
-import { clientes, locales, opiniones, sellos } from '../db/schema';
+import { clientes, locales, opiniones, sellos, sucursales } from '../db/schema';
 import type { BaseDeDatos } from './tipos';
 
 export interface VisitaParaOpinar {
@@ -42,19 +42,39 @@ export async function visitaParaOpinar(
       selloId: sellos.id,
       clienteId: clientes.id,
       clienteNombre: clientes.nombre,
+      localId: locales.id,
       localNombre: locales.nombre,
-      googleMapsUrl: locales.googleMapsUrl,
+      googleMapsUrl: sucursales.googleMapsUrl,
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
     })
     .from(sellos)
     .innerJoin(clientes, eq(sellos.clienteId, clientes.id))
     .innerJoin(locales, eq(sellos.localId, locales.id))
+    .leftJoin(sucursales, eq(sellos.sucursalId, sucursales.id))
     .where(and(eq(sellos.id, selloId), eq(locales.slug, localSlug)))
     .limit(1);
 
-  const visita = filas[0];
-  if (!visita) return null;
+  const fila = filas[0];
+  if (!fila) return null;
+  const { localId, ...visita } = fila;
+
+  /**
+   * La reseña va a la ficha de la sede que visitó: cada sede tiene sus propias
+   * reseñas en Google. Si esa sede no tiene enlace (o el sello es viejo y no
+   * tiene sede), se usa el de otra sede del local antes que no ofrecer nada.
+   */
+  if (!visita.googleMapsUrl) {
+    const [otra] = await db
+      .select({ url: sucursales.googleMapsUrl })
+      .from(sucursales)
+      .where(
+        and(eq(sucursales.localId, localId), eq(sucursales.activa, true), isNotNull(sucursales.googleMapsUrl)),
+      )
+      .orderBy(asc(sucursales.creadoEn))
+      .limit(1);
+    visita.googleMapsUrl = otra?.url ?? null;
+  }
 
   const previas = await db
     .select({ id: opiniones.id })

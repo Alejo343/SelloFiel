@@ -36,6 +36,9 @@ export function idDeObjeto(issuerId: string, clienteId: string): string {
 
 /* ------------------------------------------------------------- la clase */
 
+/** Tope de Google para `merchantLocations` en una plantilla. */
+export const MAXIMO_UBICACIONES = 10;
+
 export interface DatosClase {
   issuerId: string;
   localId: string;
@@ -43,8 +46,8 @@ export interface DatosClase {
   premio: string;
   sellosObjetivo: number;
   /** Coordenadas del local, para el aviso por cercanía */
-  lat?: string | null;
-  lng?: string | null;
+  /** Las sedes activas con coordenadas, para el aviso por cercanía */
+  ubicaciones?: Array<{ lat: string | null; lng: string | null }>;
   /** Enlace para que el cliente pida o reserve */
   whatsapp?: string | null;
   /**
@@ -102,13 +105,13 @@ export function construirClase(datos: DatosClase) {
    * Android solo le llega a quien le dio al wallet permiso de ubicación
    * siempre, así que no se le puede prometer al local que llega a todos.
    */
-  if (datos.lat && datos.lng) {
-    const latitud = Number(datos.lat);
-    const longitud = Number(datos.lng);
-    if (Number.isFinite(latitud) && Number.isFinite(longitud)) {
-      clase.merchantLocations = [{ latitude: latitud, longitude: longitud }];
-    }
-  }
+  const puntos = (datos.ubicaciones ?? [])
+    .filter((u) => u.lat && u.lng)
+    .map((u) => ({ latitude: Number(u.lat), longitude: Number(u.lng) }))
+    .filter((p) => Number.isFinite(p.latitude) && Number.isFinite(p.longitude))
+    // Google acepta hasta 10 puntos por plantilla.
+    .slice(0, MAXIMO_UBICACIONES);
+  if (puntos.length > 0) clase.merchantLocations = puntos;
 
   if (datos.whatsapp) {
     clase.linksModuleData = {

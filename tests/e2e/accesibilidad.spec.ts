@@ -112,6 +112,7 @@ test.describe('panel del dueño', () => {
     ['alertas', '/panel/alertas'],
     ['chips', '/panel/chips'],
     ['campañas', '/panel/campanas'],
+    ['sucursales', '/panel/sucursales'],
   ] as const) {
     test(nombre, async ({ page }) => {
       if (ruta === '/panel/mensajes') {

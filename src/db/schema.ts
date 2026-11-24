@@ -76,12 +76,8 @@ export const locales = pgTable('locales', {
   logoUrl: text('logo_url'),
   colorPrimario: text('color_primario').notNull().default('#111111'),
   colorFondo: text('color_fondo').notNull().default('#ffffff'),
-  /** Coordenadas para el aviso por cercanía del wallet (RF-10) */
-  lat: text('lat'),
-  lng: text('lng'),
   /** En formato internacional, sin signos: 573001234567 */
   whatsapp: text('whatsapp'),
-  googleMapsUrl: text('google_maps_url'),
   /**
    * Define qué día es "hoy" al sumar un sello. Un local que cierra a las 2 am
    * necesita que un sello de la 1 am cuente como el día anterior, y eso se
@@ -103,6 +99,46 @@ export const locales = pgTable('locales', {
   emitePases: boolean('emite_pases').notNull().default(true),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
 });
+
+/* ------------------------------------------------------------ sucursales */
+
+/**
+ * Las sedes físicas de un local (RF-32).
+ *
+ * En el código, "local" es la MARCA: el club, el programa, los clientes, la
+ * tarjeta y el panel son uno solo para todas sus sucursales. Por eso el
+ * cliente junta sellos en cualquier sede y la regla de un sello por día vale
+ * para la marca entera: ir a dos sedes el mismo día no da dos sellos.
+ *
+ * Lo que es propio de cada sede vive acá: dónde está (para el aviso por
+ * cercanía del wallet) y su ficha de Google Maps, porque cada sede tiene sus
+ * propias reseñas y la del cliente tiene que ir a la que visitó.
+ *
+ * Todo local tiene al menos una. No se borran, se desactivan: conservan el
+ * historial de lo que pasó en ellas.
+ */
+export const sucursales = pgTable(
+  'sucursales',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    localId: uuid('local_id')
+      .notNull()
+      .references(() => locales.id, { onDelete: 'cascade' }),
+    nombre: text('nombre').notNull(),
+    direccion: text('direccion'),
+    /** Coordenadas para el aviso por cercanía del wallet (RF-10) */
+    lat: text('lat'),
+    lng: text('lng'),
+    /** Enlace para dejar la reseña de ESTA sede (RF-28) */
+    googleMapsUrl: text('google_maps_url'),
+    activa: boolean('activa').notNull().default(true),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('sucursales_local_nombre_unico').on(t.localId, t.nombre),
+    index('sucursales_local_idx').on(t.localId),
+  ],
+);
 
 /* -------------------------------------------------------------- programas */
 
@@ -209,6 +245,10 @@ export const tags = pgTable(
     localId: uuid('local_id')
       .notNull()
       .references(() => locales.id, { onDelete: 'cascade' }),
+    /** La sede donde está el chip o la pantalla: el sello cuenta para ella */
+    sucursalId: uuid('sucursal_id')
+      .notNull()
+      .references(() => sucursales.id, { onDelete: 'no action' }),
     /** Lo que va en la URL /t/[token]. No debe ser adivinable (RNF-06). */
     token: text('token').notNull().unique(),
     tipo: tipoTag('tipo').notNull().default('nfc'),
@@ -284,6 +324,11 @@ export const sellos = pgTable(
      */
     fecha: date('fecha').notNull(),
     origen: origenSello('origen').notNull(),
+    /**
+     * Dónde fue la visita. Sale del tag; en un sello manual, de lo que elija
+     * el dueño. Null solo en sellos viejos sin sede conocida.
+     */
+    sucursalId: uuid('sucursal_id').references(() => sucursales.id, { onDelete: 'set null' }),
     tagId: uuid('tag_id').references(() => tags.id, { onDelete: 'set null' }),
     /** Contador del chip en este tap, para detectar replays (RN-04) */
     contadorChip: integer('contador_chip'),
@@ -337,6 +382,8 @@ export const canjes = pgTable(
     /** Copia del texto del premio al momento del canje: el programa puede cambiar después */
     premio: text('premio').notNull(),
     sellosUsados: smallint('sellos_usados').notNull(),
+    /** Dónde se entregó el premio */
+    sucursalId: uuid('sucursal_id').references(() => sucursales.id, { onDelete: 'set null' }),
     usuarioLocalId: uuid('usuario_local_id').references(() => usuariosLocal.id, {
       onDelete: 'set null',
     }),

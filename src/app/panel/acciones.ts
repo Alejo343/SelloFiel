@@ -37,6 +37,8 @@ export async function accionSumarSelloManual(datos: FormData): Promise<void> {
     zonaHoraria: local.zonaHoraria,
     origen: 'manual',
     usuarioLocalId: sesion.usuarioId,
+    // El servicio comprueba que la sede sea de este local.
+    sucursalId: String(datos.get('sucursalId') ?? '') || null,
   });
 
   sincronizarWalletPronto(sesion.localId);
@@ -60,6 +62,7 @@ export async function accionCanjear(datos: FormData): Promise<void> {
     sellosObjetivo: local.sellosObjetivo,
     premio: local.premio,
     usuarioLocalId: sesion.usuarioId,
+    sucursalId: String(datos.get('sucursalId') ?? '') || null,
   });
 
   sincronizarWalletPronto(sesion.localId);

@@ -6,6 +6,7 @@
  * JavaScript no cargó.
  */
 
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { MarcoPanel } from '@/componentes/marco-panel';
@@ -87,19 +88,10 @@ export default async function PaginaPrograma({ searchParams }: PageProps<'/panel
             <small>Para el botón de pedir o reservar que ve el cliente en su tarjeta.</small>
           </div>
 
-          <div className="campo">
-            <label htmlFor="googleMapsUrl">Enlace para dejar reseñas en Google Maps</label>
-            <input
-              id="googleMapsUrl"
-              name="googleMapsUrl"
-              type="url"
-              defaultValue={local.googleMapsUrl ?? ''}
-            />
-            <small>
-              Cuando un cliente diga que su visita estuvo bien, se le invita a dejar su reseña aquí.
-            </small>
-          </div>
-
+          <p className="ayuda">
+            La ubicación y el enlace de reseñas de Google se configuran por sede, en{' '}
+            <Link href="/panel/sucursales">Sucursales</Link>.
+          </p>
         </section>
 
         <section className="hoja">
@@ -166,26 +158,6 @@ export default async function PaginaPrograma({ searchParams }: PageProps<'/panel
               required
             />
             <small>Mejor unos días antes que el mismo día: le da tiempo de hacer planes.</small>
-          </div>
-
-        </section>
-
-        <section className="hoja">
-          <h2>Ubicación</h2>
-          <p>
-            <small>
-              Con esto, la tarjeta aparece en el celular del cliente cuando pasa cerca del local.
-            </small>
-          </p>
-
-          <div className="campo">
-            <label htmlFor="lat">Latitud</label>
-            <input id="lat" name="lat" defaultValue={local.lat ?? ''} placeholder="4.6533" />
-          </div>
-
-          <div className="campo">
-            <label htmlFor="lng">Longitud</label>
-            <input id="lng" name="lng" defaultValue={local.lng ?? ''} placeholder="-74.0836" />
           </div>
 
         </section>

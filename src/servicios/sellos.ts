@@ -14,7 +14,7 @@ import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { db as dbPorDefecto } from '../db';
 import { esViolacionUnica } from '../db/errores';
-import { canjes, clientes, sellos, tags } from '../db/schema';
+import { canjes, clientes, sellos, sucursales, tags } from '../db/schema';
 import { diaEnZona, type Dia } from '../dominio/fechas';
 import {
   calcularEstado,
@@ -73,6 +73,11 @@ export interface OpcionesSumarSello {
   zonaHoraria: string;
   origen: 'nfc' | 'qr' | 'manual';
   tagId?: string | null;
+  /**
+   * Para sellos sin tag (manuales): la sede donde está el cliente. Con tag no
+   * hace falta: la sede sale del tag, y manda sobre lo que se pase acá.
+   */
+  sucursalId?: string | null;
   contadorChip?: number | null;
   usuarioLocalId?: string | null;
   ip?: string | null;
@@ -110,13 +115,19 @@ export async function sumarSello(
   }
 
   let tagActivo: boolean | undefined;
+  let sucursalId: string | null = null;
   if (opciones.tagId) {
     const [tag] = await db
-      .select({ activo: tags.activo })
+      .select({ activo: tags.activo, sucursalId: tags.sucursalId, sucursalActiva: sucursales.activa })
       .from(tags)
+      .innerJoin(sucursales, eq(tags.sucursalId, sucursales.id))
       .where(and(eq(tags.id, opciones.tagId), eq(tags.localId, opciones.localId)))
       .limit(1);
-    tagActivo = tag?.activo ?? false;
+    // Un chip de una sede cerrada no suma, igual que un chip dado de baja.
+    tagActivo = (tag?.activo ?? false) && (tag?.sucursalActiva ?? false);
+    sucursalId = tag?.sucursalId ?? null;
+  } else if (opciones.sucursalId) {
+    sucursalId = await sucursalDelLocal(opciones.localId, opciones.sucursalId, db);
   }
 
   const ultimoSello = await ultimoDiaConSello(opciones.clienteId, db);
@@ -142,6 +153,7 @@ export async function sumarSello(
       clienteId: opciones.clienteId,
       fecha: hoy,
       origen: opciones.origen,
+      sucursalId,
       tagId: opciones.tagId ?? null,
       contadorChip: opciones.contadorChip ?? null,
       usuarioLocalId: opciones.usuarioLocalId ?? null,
@@ -184,6 +196,8 @@ export interface OpcionesCanje {
   sellosObjetivo: number;
   premio: string;
   usuarioLocalId?: string | null;
+  /** Dónde se entregó el premio */
+  sucursalId?: string | null;
 }
 
 export type ResultadoCanje =
@@ -234,6 +248,9 @@ export async function canjear(
         premio: opciones.premio,
         sellosUsados: decision.sellosAUsar,
         usuarioLocalId: opciones.usuarioLocalId ?? null,
+        sucursalId: opciones.sucursalId
+          ? await sucursalDelLocal(opciones.localId, opciones.sucursalId, tx)
+          : null,
       })
       .returning({ id: canjes.id });
 
@@ -259,4 +276,22 @@ export async function canjear(
     return db.transaction(ejecutar);
   }
   return ejecutar(db);
+}
+
+/**
+ * El id de la sede si es de este local; si no, null. El id llega de un
+ * formulario: nunca se guarda una sede de otro local en un sello propio.
+ */
+async function sucursalDelLocal(
+  localId: string,
+  sucursalId: string,
+  db: BaseDeDatos,
+): Promise<string | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(sucursalId)) return null;
+  const [fila] = await db
+    .select({ id: sucursales.id })
+    .from(sucursales)
+    .where(and(eq(sucursales.id, sucursalId), eq(sucursales.localId, localId)))
+    .limit(1);
+  return fila?.id ?? null;
 }

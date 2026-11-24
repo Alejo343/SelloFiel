@@ -11,7 +11,7 @@ import { and, count, eq, gte, sql } from 'drizzle-orm';
 
 import { db as dbPorDefecto } from '../db';
 import { esViolacionUnica } from '../db/errores';
-import { administradores, clientes, locales, programas, sellos, usuariosLocal } from '../db/schema';
+import { administradores, clientes, locales, programas, sellos, sucursales, usuariosLocal } from '../db/schema';
 import { normalizarColor } from '../dominio/color';
 import { validarSlug } from '../dominio/slug';
 import { normalizarTelefono } from '../dominio/telefono';
@@ -188,6 +188,10 @@ export async function crearLocalConDueno(
           emitePases: datos.emitePases,
         })
         .returning({ id: locales.id });
+
+      // Todo local nace con una sede. Si después abre otra, la agrega desde
+      // su panel; mientras tenga una sola, nunca tiene que elegir sede.
+      await tx.insert(sucursales).values({ localId: local.id, nombre: 'Principal' });
 
       await tx.insert(programas).values({
         localId: local.id,

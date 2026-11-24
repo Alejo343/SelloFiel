@@ -22,6 +22,7 @@ import {
   plantillas,
   programas,
   sellos,
+  sucursales,
   tags,
   usuariosLocal,
 } from '../src/db/schema';
@@ -58,7 +59,7 @@ async function sembrar() {
   try {
     // Se vacía en orden inverso a las dependencias.
     await sql`truncate table sellos, canjes, mensajes, alertas_fraude, tarjetas,
-                             clientes, tags, plantillas, programas, usuarios_local, locales, administradores
+                             clientes, tags, sucursales, plantillas, campanas, programas, usuarios_local, locales, administradores
                        restart identity cascade`;
 
     /* ----------------------------------------------- local 1: La Esquina */
@@ -75,11 +76,31 @@ async function sembrar() {
         logoUrl: 'https://ejemplo.test/la-esquina-logo.png',
         colorPrimario: '#8b1e1e',
         colorFondo: '#fdf6ec',
-        lat: '4.6533',
-        lng: '-74.0836',
         whatsapp: '573001112233',
-        googleMapsUrl: 'https://maps.google.com/?cid=ejemplo-la-esquina',
       })
+      .returning();
+
+    // Dos sedes: la tarjeta es una sola y suma en cualquiera de las dos.
+    const [sedeCentro, sedeNorte] = await db
+      .insert(sucursales)
+      .values([
+        {
+          localId: esquina.id,
+          nombre: 'Centro',
+          direccion: 'Calle 10 # 5-20',
+          lat: '4.6533',
+          lng: '-74.0836',
+          googleMapsUrl: 'https://maps.google.com/?cid=ejemplo-la-esquina',
+        },
+        {
+          localId: esquina.id,
+          nombre: 'Norte',
+          direccion: 'Carrera 15 # 93-40',
+          lat: '4.6765',
+          lng: '-74.0482',
+          googleMapsUrl: 'https://maps.google.com/?cid=ejemplo-la-esquina-norte',
+        },
+      ])
       .returning();
 
     await db.insert(programas).values({
@@ -109,6 +130,7 @@ async function sembrar() {
       .values([
         {
           localId: esquina.id,
+          sucursalId: sedeCentro.id,
           token: 'tag-esquina-caja',
           objeto: 'Media luna de la caja',
           tipo: 'nfc' as const,
@@ -116,15 +138,24 @@ async function sembrar() {
         {
           // Un QR impreso NO suma sellos: solo sirve para unirse (RN-10).
           localId: esquina.id,
+          sucursalId: sedeCentro.id,
           token: 'tag-esquina-mesa4',
           objeto: 'QR impreso de la mesa 4',
           tipo: 'qr_impreso' as const,
         },
         {
           localId: esquina.id,
+          sucursalId: sedeCentro.id,
           token: 'tag-esquina-pantalla',
           objeto: 'Pantalla de la caja',
           tipo: 'pantalla' as const,
+        },
+        {
+          localId: esquina.id,
+          sucursalId: sedeNorte.id,
+          token: 'tag-esquina-norte',
+          objeto: 'Caja de la sede Norte',
+          tipo: 'nfc' as const,
         },
       ])
       .returning();
@@ -215,6 +246,7 @@ async function sembrar() {
         fecha: diaRelativo(-atras),
         origen: 'nfc' as const,
         tagId: tagCaja.id,
+        sucursalId: sedeCentro.id,
       })),
     );
 
@@ -226,6 +258,7 @@ async function sembrar() {
         fecha: diaRelativo(-atras),
         origen: 'qr' as const,
         tagId: tagMesa.id,
+        sucursalId: sedeCentro.id,
       })),
     );
 
@@ -237,6 +270,7 @@ async function sembrar() {
         fecha: diaRelativo(-atras),
         origen: 'nfc' as const,
         tagId: tagCaja.id,
+        sucursalId: sedeCentro.id,
       })),
     );
 
@@ -251,9 +285,12 @@ async function sembrar() {
         emitePases: false,
         logoUrl: 'https://ejemplo.test/cafe-vecino-logo.png',
         whatsapp: '573009998877',
-        lat: '4.6600',
-        lng: '-74.0700',
       })
+      .returning();
+
+    const [sedeVecino] = await db
+      .insert(sucursales)
+      .values({ localId: vecino.id, nombre: 'Principal', lat: '4.6600', lng: '-74.0700' })
       .returning();
 
     await db.insert(programas).values({
@@ -271,7 +308,12 @@ async function sembrar() {
 
     const [tagVecino] = await db
       .insert(tags)
-      .values({ localId: vecino.id, token: 'tag-vecino-barra', objeto: 'Corona de la barra' })
+      .values({
+        localId: vecino.id,
+        sucursalId: sedeVecino.id,
+        token: 'tag-vecino-barra',
+        objeto: 'Corona de la barra',
+      })
       .returning();
 
     const [vecinoCliente] = await db
@@ -294,6 +336,7 @@ async function sembrar() {
       fecha: diaRelativo(-2),
       origen: 'nfc',
       tagId: tagVecino.id,
+      sucursalId: sedeVecino.id,
     });
 
     /* ------------------------- local de pruebas de Google Wallet -------- */
@@ -315,10 +358,12 @@ async function sembrar() {
         nombre: 'Sello Fiel — Pruebas',
         colorPrimario: '#1F2A44',
         logoUrl: 'https://sellofiel.app/marca/logo.png',
-        lat: '4.6533',
-        lng: '-74.0836',
       })
       .returning();
+
+    await db
+      .insert(sucursales)
+      .values({ localId: pruebas.id, nombre: 'Principal', lat: '4.6533', lng: '-74.0836' });
 
     await db.insert(programas).values({
       localId: pruebas.id,
@@ -348,7 +393,7 @@ async function sembrar() {
     );
 
     console.log('Semilla lista:');
-    console.log(`  La Esquina   (${esquina.slug})  5 clientes, 13 sellos, 2 tags`);
+    console.log(`  La Esquina   (${esquina.slug})  5 clientes, 13 sellos, 4 tags, sedes Centro y Norte`);
     console.log(`  Café Vecino  (${vecino.slug})  1 cliente,  1 sello,  1 tag`);
     console.log('  Marta Fiel tiene 8/10 sellos. Ana Perdida está inactiva.');
     console.log('  Carlos Cumple y Sofía Vecina cumplen en 3 días.');

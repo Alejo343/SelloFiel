@@ -7,9 +7,11 @@ import { notFound } from 'next/navigation';
 import { BotonCopiar } from '@/app/panel/chips/copiar';
 import { NOMBRE_TIPO } from '@/app/panel/chips/tipos';
 import { MarcoAdmin } from '@/componentes/marco-admin';
+import { SelectorSucursal } from '@/componentes/selector-sucursal';
 import { exigirAdmin } from '@/lib/cookies-admin';
 import { obtenerLocalAdmin } from '@/servicios/admin';
 import { direccionDelChip, listarChips } from '@/servicios/chips';
+import { listarSucursales } from '@/servicios/sucursales';
 
 import {
   accionBajaChipAdmin,
@@ -26,7 +28,7 @@ export default async function PaginaLocalAdmin({ params }: PageProps<'/admin/loc
   const local = await obtenerLocalAdmin(id);
   if (!local) notFound();
 
-  const chips = await listarChips(local.id);
+  const [chips, sedes] = await Promise.all([listarChips(local.id), listarSucursales(local.id)]);
   const base = process.env.URL_PUBLICA ?? 'http://localhost:3011';
 
   return (
@@ -102,6 +104,7 @@ export default async function PaginaLocalAdmin({ params }: PageProps<'/admin/loc
               <option value="pantalla">Pantalla de caja</option>
             </select>
           </div>
+          <SelectorSucursal sucursales={sedes} />
           <button type="submit" className="boton--secundario">Registrar</button>
         </form>
       </section>

@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   cambiarEstadoChip,
   crearChip,
+  moverChip,
   direccionDelChip,
   generarToken,
   listarChips,
@@ -53,7 +54,7 @@ describe('generarToken', () => {
 describe('crearChip', () => {
   it('registra el chip con su nombre y tipo', async () => {
     const { id } = await crearChip(
-      { localId: local.localId, objeto: '  Media luna de la caja  ', tipo: 'nfc' },
+      { localId: local.localId, sucursalId: local.sucursalId, objeto: '  Media luna de la caja  ', tipo: 'nfc' },
       base.db,
     );
 
@@ -65,7 +66,7 @@ describe('crearChip', () => {
 
   it('un chip recién registrado ya suma sellos', async () => {
     const { token } = await crearChip(
-      { localId: local.localId, objeto: 'Corona', tipo: 'nfc' },
+      { localId: local.localId, sucursalId: local.sucursalId, objeto: 'Corona', tipo: 'nfc' },
       base.db,
     );
 
@@ -78,7 +79,7 @@ describe('crearChip', () => {
 describe('dar de baja un chip perdido', () => {
   it('deja de sumar sellos al instante', async () => {
     const { id } = await crearChip(
-      { localId: local.localId, objeto: 'Chip perdido', tipo: 'nfc' },
+      { localId: local.localId, sucursalId: local.sucursalId, objeto: 'Chip perdido', tipo: 'nfc' },
       base.db,
     );
     const clienteId = await crearClienteDePrueba(base.db, local.localId);
@@ -102,7 +103,7 @@ describe('dar de baja un chip perdido', () => {
   });
 
   it('se puede volver a activar', async () => {
-    const { id } = await crearChip({ localId: local.localId, objeto: 'X', tipo: 'nfc' }, base.db);
+    const { id } = await crearChip({ localId: local.localId, sucursalId: local.sucursalId, objeto: 'X', tipo: 'nfc' }, base.db);
     await cambiarEstadoChip(local.localId, id, false, base.db);
     await cambiarEstadoChip(local.localId, id, true, base.db);
     expect((await obtenerChip(local.localId, id, base.db))?.activo).toBe(true);
@@ -111,7 +112,7 @@ describe('dar de baja un chip perdido', () => {
 
 describe('último uso', () => {
   it('nunca usado hasta que suma un sello', async () => {
-    const { id } = await crearChip({ localId: local.localId, objeto: 'X', tipo: 'nfc' }, base.db);
+    const { id } = await crearChip({ localId: local.localId, sucursalId: local.sucursalId, objeto: 'X', tipo: 'nfc' }, base.db);
     expect((await obtenerChip(local.localId, id, base.db))?.ultimoUso).toBeNull();
 
     const clienteId = await crearClienteDePrueba(base.db, local.localId);
@@ -136,13 +137,18 @@ describe('aislamiento entre locales (RNF-05)', () => {
   it('no se ven, ni se dan de baja, ni se renombran los chips de otro local', async () => {
     const otro = await crearLocalDePrueba(base.db);
     const { id } = await crearChip(
-      { localId: otro.localId, objeto: 'Ajeno', tipo: 'nfc' },
+      { localId: otro.localId, sucursalId: otro.sucursalId, objeto: 'Ajeno', tipo: 'nfc' },
       base.db,
     );
 
     expect(await obtenerChip(local.localId, id, base.db)).toBeNull();
     expect((await listarChips(local.localId, base.db)).map((c) => c.id)).not.toContain(id);
     expect(await cambiarEstadoChip(local.localId, id, false, base.db)).toBe(false);
+    // Tampoco se puede mover a una sede propia ni crear uno en sede ajena.
+    expect(await moverChip(local.localId, id, local.sucursalId, base.db)).toBe(false);
+    await expect(
+      crearChip({ localId: local.localId, sucursalId: otro.sucursalId, objeto: 'Colado', tipo: 'nfc' }, base.db),
+    ).rejects.toThrow();
     expect(await renombrarChip(local.localId, id, 'Hackeado', base.db)).toBe(false);
 
     const intacto = await obtenerChip(otro.localId, id, base.db);

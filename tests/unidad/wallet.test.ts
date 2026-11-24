@@ -78,7 +78,7 @@ describe('construirClase', () => {
   it('usa merchantLocations para el aviso por cercanía, NO el campo locations', () => {
     // `locations` está deprecado en Google Wallet y ya no dispara avisos.
     // Si alguien lo "arregla" volviendo a ese campo, esta prueba lo atrapa.
-    const clase = construirClase({ ...DATOS_CLASE, lat: '4.6533', lng: '-74.0836' });
+    const clase = construirClase({ ...DATOS_CLASE, ubicaciones: [{ lat: '4.6533', lng: '-74.0836' }] });
 
     expect(clase.merchantLocations).toEqual([{ latitude: 4.6533, longitude: -74.0836 }]);
     expect(clase.locations).toBeUndefined();
@@ -91,8 +91,30 @@ describe('construirClase', () => {
 
   it('omite la ubicación si las coordenadas no son números', () => {
     // El dueño escribe las coordenadas a mano en el panel: puede pegar texto.
-    const clase = construirClase({ ...DATOS_CLASE, lat: 'cerca del parque', lng: '-74' });
+    const clase = construirClase({ ...DATOS_CLASE, ubicaciones: [{ lat: 'cerca del parque', lng: '-74' }] });
     expect(clase.merchantLocations).toBeUndefined();
+  });
+
+  it('pone un punto por cada sede con coordenadas, y salta las que no tienen', () => {
+    // Con varias sucursales, el aviso tiene que saltar cerca de cualquiera.
+    const clase = construirClase({
+      ...DATOS_CLASE,
+      ubicaciones: [
+        { lat: '4.6533', lng: '-74.0836' },
+        { lat: null, lng: null },
+        { lat: '4.6765', lng: '-74.0482' },
+      ],
+    });
+    expect(clase.merchantLocations).toEqual([
+      { latitude: 4.6533, longitude: -74.0836 },
+      { latitude: 4.6765, longitude: -74.0482 },
+    ]);
+  });
+
+  it('no pasa de 10 puntos, el tope de Google', () => {
+    const ubicaciones = Array.from({ length: 14 }, (_, i) => ({ lat: `4.${i + 1}`, lng: '-74' }));
+    const clase = construirClase({ ...DATOS_CLASE, ubicaciones });
+    expect(clase.merchantLocations).toHaveLength(10);
   });
 
   it('añade el enlace de WhatsApp cuando el local tiene número', () => {

@@ -14,7 +14,7 @@
 import { and, asc, eq, isNull, lt, sql } from 'drizzle-orm';
 
 import { db as dbPorDefecto } from '../../db';
-import { clientes, colaWallet, locales, programas, tarjetas } from '../../db/schema';
+import { clientes, colaWallet, locales, programas, sucursales, tarjetas } from '../../db/schema';
 import { calcularEstado } from '../../dominio/sellos';
 import { contarSellosDisponibles } from '../sellos';
 import type { BaseDeDatos } from '../tipos';
@@ -167,8 +167,6 @@ async function ejecutar(
       localId: locales.id,
       nombre: locales.nombre,
       slug: locales.slug,
-      lat: locales.lat,
-      lng: locales.lng,
       whatsapp: locales.whatsapp,
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
@@ -189,8 +187,11 @@ async function ejecutar(
       localNombre: local.nombre,
       premio: local.premio,
       sellosObjetivo: local.sellosObjetivo,
-      lat: local.lat,
-      lng: local.lng,
+      ubicaciones: await db
+        .select({ lat: sucursales.lat, lng: sucursales.lng })
+        .from(sucursales)
+        .where(and(eq(sucursales.localId, local.localId), eq(sucursales.activa, true)))
+        .orderBy(asc(sucursales.creadoEn)),
       whatsapp: local.whatsapp,
       // Google exige logo. Si el local no configuró el suyo, se usa el de
       // Sello Fiel para no bloquear la creación de la plantilla.

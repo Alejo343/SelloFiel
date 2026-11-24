@@ -4,7 +4,7 @@
  * de verdad le importa.
  */
 
-import { clientes, locales, programas, tags, usuariosLocal } from '../../src/db/schema';
+import { clientes, locales, programas, sucursales, tags, usuariosLocal } from '../../src/db/schema';
 import { hashearContrasena } from '../../src/lib/contrasena';
 import type { BaseDeDatos } from '../../src/servicios/tipos';
 
@@ -13,6 +13,8 @@ export interface LocalDePrueba {
   slug: string;
   tagId: string;
   tagToken: string;
+  /** La sucursal "Principal" que se crea con el local; el tag está en ella */
+  sucursalId: string;
   usuarioLocalId: string;
   sellosObjetivo: number;
   premio: string;
@@ -60,11 +62,17 @@ export async function crearLocalDePrueba(
     })
     .returning({ id: usuariosLocal.id });
 
+  const [sucursal] = await db
+    .insert(sucursales)
+    .values({ localId: local.id, nombre: 'Principal' })
+    .returning({ id: sucursales.id });
+
   const tagToken = `tag-${slug}`;
   const [tag] = await db
     .insert(tags)
     .values({
       localId: local.id,
+      sucursalId: sucursal.id,
       token: tagToken,
       objeto: 'Tag de prueba',
       activo: opciones.tagActivo ?? true,
@@ -76,6 +84,7 @@ export async function crearLocalDePrueba(
     slug,
     tagId: tag.id,
     tagToken,
+    sucursalId: sucursal.id,
     usuarioLocalId: usuario.id,
     sellosObjetivo,
     premio,

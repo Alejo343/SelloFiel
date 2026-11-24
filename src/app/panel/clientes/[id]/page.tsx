@@ -11,10 +11,12 @@
 import { notFound } from 'next/navigation';
 
 import { MarcoPanel } from '@/componentes/marco-panel';
+import { SelectorSucursal } from '@/componentes/selector-sucursal';
 import { calcularEstado } from '@/dominio/sellos';
 import { formatearParaMostrar } from '@/dominio/telefono';
 import { exigirSesion } from '@/lib/cookies-panel';
 import { obtenerClienteDelPanel, obtenerLocalDelPanel } from '@/servicios/panel';
+import { listarSucursales } from '@/servicios/sucursales';
 
 import { accionCanjear, accionDarDeBaja, accionSumarSelloManual } from '../../acciones';
 
@@ -28,6 +30,7 @@ export default async function PaginaCliente({ params }: PageProps<'/panel/client
   const cliente = await obtenerClienteDelPanel(sesion.localId, id);
   if (!cliente) notFound();
 
+  const sedes = await listarSucursales(sesion.localId);
   const estado = calcularEstado(cliente.sellosDisponibles, local.sellosObjetivo);
 
   return (
@@ -72,6 +75,7 @@ export default async function PaginaCliente({ params }: PageProps<'/panel/client
           </p>
           <form action={accionCanjear}>
             <input type="hidden" name="clienteId" value={cliente.id} />
+            <SelectorSucursal sucursales={sedes} etiqueta="¿En qué sucursal lo entregaste?" id="sede-canje" />
             <button type="submit">Entregué el premio, descontar {estado.objetivo} sellos</button>
           </form>
         </section>
@@ -84,6 +88,7 @@ export default async function PaginaCliente({ params }: PageProps<'/panel/client
           </p>
           <form action={accionSumarSelloManual}>
             <input type="hidden" name="clienteId" value={cliente.id} />
+            <SelectorSucursal sucursales={sedes} etiqueta="¿En qué sucursal está?" id="sede-sello" />
             <button type="submit">Sumar un sello</button>
           </form>
         </section>

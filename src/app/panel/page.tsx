@@ -16,6 +16,7 @@ import { exigirSesion } from '@/lib/cookies-panel';
 import { contarAlertas } from '@/servicios/antifraude';
 import { contarPendientes } from '@/servicios/mensajes';
 import { cumpleanosProximos, obtenerLocalDelPanel, resumenDelLocal } from '@/servicios/panel';
+import { resumenPorSucursal } from '@/servicios/sucursales';
 
 import { accionSalir } from './acciones';
 
@@ -28,12 +29,14 @@ export default async function PaginaPanel() {
   const hoy = diaEnZona(new Date(), local.zonaHoraria);
   const inicioDelMes = `${hoy.slice(0, 7)}-01`;
 
-  const [resumen, cumples, pendientes, alertas] = await Promise.all([
+  const [resumen, cumples, pendientes, alertas, sedes] = await Promise.all([
     resumenDelLocal(sesion.localId, { desde: inicioDelMes, hasta: hoy }),
     cumpleanosProximos(sesion.localId, hoy, local.diasAntesCumple),
     contarPendientes(sesion.localId),
     contarAlertas(sesion.localId),
+    resumenPorSucursal(sesion.localId, inicioDelMes),
   ]);
+  const sedesAbiertas = sedes.filter((s) => s.activa);
 
   return (
     <MarcoPanel>
@@ -67,6 +70,18 @@ export default async function PaginaPanel() {
           <Metrica etiqueta="Sellos sumados" valor={resumen.sellosEnPeriodo} />
           <Metrica etiqueta="Premios entregados" valor={resumen.canjesEnPeriodo} />
         </div>
+        {sedesAbiertas.length > 1 && (
+          <ul className="lista" aria-label="Sellos por sucursal">
+            {sedesAbiertas.map((s) => (
+              <li key={s.id} className="fila">
+                <span className="fila__titulo">{s.nombre}</span>
+                <span className="fila__meta">
+                  {s.sellosDelPeriodo} {s.sellosDelPeriodo === 1 ? 'sello' : 'sellos'} este mes
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
         {resumen.sellosPorCanje !== null && (
           <p className="ayuda">Sellos por premio entregado: {resumen.sellosPorCanje}</p>
         )}
@@ -103,6 +118,9 @@ export default async function PaginaPanel() {
           </li>
           <li>
             <Link href="/panel/campanas">Campañas: un mensaje para muchos</Link>
+          </li>
+          <li>
+            <Link href="/panel/sucursales">Sucursales ({sedesAbiertas.length})</Link>
           </li>
           <li>
             <Link href="/panel/chips">Chips y códigos</Link>

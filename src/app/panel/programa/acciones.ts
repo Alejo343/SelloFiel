@@ -39,9 +39,6 @@ const esquema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/, 'El color va en formato #RRGGBB')
     .optional()
     .or(z.literal('')),
-  googleMapsUrl: z.string().trim().url('Ese enlace no parece válido').optional().or(z.literal('')),
-  lat: z.string().trim().optional().or(z.literal('')),
-  lng: z.string().trim().optional().or(z.literal('')),
 });
 
 /**
@@ -87,9 +84,6 @@ export async function accionGuardarPrograma(datos: FormData): Promise<void> {
   await actualizarLocal(sesion.localId, {
     nombre: v.nombre,
     whatsapp,
-    googleMapsUrl: v.googleMapsUrl || null,
-    lat: v.lat || null,
-    lng: v.lng || null,
     logoUrl: v.logoUrl || null,
     colorPrimario: v.colorPrimario || undefined,
   });

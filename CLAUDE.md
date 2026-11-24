@@ -53,6 +53,16 @@ texto una vez; se crea un mensaje pendiente por cliente en la bandeja, con `mens
 clave `campana:<id>` (dos campañas iguales son dos envíos). No envía nada sola. Quien pidió la baja
 no entra en ningún grupo, ni en "todos".
 
+**Sucursales (`/panel/sucursales`)**: en el código, **"local" es la marca**: club, programa,
+clientes, tarjeta, plantillas y panel son uno para todas las sedes. La tabla `sucursales` guarda lo
+propio de cada sede: ubicación (todas las activas van a `merchantLocations`, tope 10) y
+`google_maps_url` (la reseña va a la sede del sello; si no tiene, a otra del local). Los tags tienen
+`sucursal_id` obligatorio y el sello toma la sede **del tag**; en sellos y canjes manuales la elige
+el dueño (`SelectorSucursal`, invisible si hay una sola sede). RN-01 sigue siendo por cliente, o
+sea por marca: dos sedes el mismo día no dan dos sellos. Una sede cerrada no suma (sus tags
+cuentan como inactivos) y la última abierta no se puede cerrar. Todo local nace con la sede
+"Principal". La migración 0009 movió `lat`, `lng` y `google_maps_url` de `locales` a la sede.
+
 **Exportar (`/panel/exportar`)**: CSV con `;`, BOM y CRLF para que Excel en español lo abra bien;
 `celdaSegura()` neutraliza celdas que empiezan con `= + - @` (inyección de fórmulas).
 
@@ -166,6 +176,9 @@ La semilla incluye el local `sellofiel-pruebas` con **identificadores fijos a pr
 ids de la plantilla y del pase en Google derivan de esos UUID, y Google no permite borrar ni
 plantillas ni pases. Con ids nuevos en cada siembra, cada siembra dejaría una plantilla huérfana
 e imborrable en la cuenta de emisor. No cambiarlos.
+
+La semilla deja a La Esquina con dos sedes, Centro (`tag-esquina-caja`, mesa y pantalla) y Norte
+(`tag-esquina-norte`).
 
 Credenciales de la semilla para el panel (solo desarrollo):
 `dueno@laesquina.test` y `dueno@cafevecino.test`, contraseña `sellofiel2026`.

@@ -10,7 +10,7 @@
 import { eq } from 'drizzle-orm';
 
 import { db as dbPorDefecto } from '../db';
-import { locales, programas, tags } from '../db/schema';
+import { locales, programas, sucursales, tags } from '../db/schema';
 import type { BaseDeDatos } from './tipos';
 
 export interface TagResuelto {
@@ -20,12 +20,14 @@ export interface TagResuelto {
   tagTipo: 'nfc' | 'qr_impreso' | 'pantalla';
   objeto: string | null;
   ultimoContador: number | null;
+  /** La sede del tag: el sello cuenta para ella (RF-32) */
+  sucursalId: string;
+  sucursalNombre: string;
   localId: string;
   localSlug: string;
   localNombre: string;
   zonaHoraria: string;
   whatsapp: string | null;
-  googleMapsUrl: string | null;
   /** Para pintar las pantallas del cliente con la marca del local */
   logoUrl: string | null;
   colorPrimario: string;
@@ -55,12 +57,14 @@ export async function resolverTag(
       tagTipo: tags.tipo,
       objeto: tags.objeto,
       ultimoContador: tags.ultimoContador,
+      sucursalId: sucursales.id,
+      sucursalNombre: sucursales.nombre,
+      sucursalActiva: sucursales.activa,
       localId: locales.id,
       localSlug: locales.slug,
       localNombre: locales.nombre,
       zonaHoraria: locales.zonaHoraria,
       whatsapp: locales.whatsapp,
-      googleMapsUrl: locales.googleMapsUrl,
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
       localActivo: locales.activo,
@@ -71,6 +75,7 @@ export async function resolverTag(
       diasAntesCumple: programas.diasAntesCumple,
     })
     .from(tags)
+    .innerJoin(sucursales, eq(tags.sucursalId, sucursales.id))
     .innerJoin(locales, eq(tags.localId, locales.id))
     .innerJoin(programas, eq(programas.localId, locales.id))
     .where(eq(tags.token, token))
@@ -82,11 +87,15 @@ export async function resolverTag(
   // Un local desactivado no atiende: se trata como si el tag no existiera.
   if (!fila.localActivo) return null;
 
-  const { localActivo: _descartado, ...resuelto } = fila;
-  return resuelto;
+  const { localActivo: _descartado, sucursalActiva, ...resuelto } = fila;
+  // Una sede cerrada no suma: sus chips se comportan como dados de baja.
+  return { ...resuelto, tagActivo: resuelto.tagActivo && sucursalActiva };
 }
 
-type LocalResuelto = Omit<TagResuelto, 'tagId' | 'tagActivo' | 'tagTipo' | 'objeto' | 'ultimoContador'>;
+type LocalResuelto = Omit<
+  TagResuelto,
+  'tagId' | 'tagActivo' | 'tagTipo' | 'objeto' | 'ultimoContador' | 'sucursalId' | 'sucursalNombre'
+>;
 
 /** El local al que pertenece un código de pantalla ya consumido. */
 export async function resolverLocalPorId(
@@ -100,7 +109,6 @@ export async function resolverLocalPorId(
       localNombre: locales.nombre,
       zonaHoraria: locales.zonaHoraria,
       whatsapp: locales.whatsapp,
-      googleMapsUrl: locales.googleMapsUrl,
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
       localActivo: locales.activo,
@@ -129,7 +137,7 @@ export async function resolverLocalPorId(
 export async function resolverLocalPorSlug(
   slug: string,
   db: BaseDeDatos = dbPorDefecto,
-): Promise<Omit<TagResuelto, 'tagId' | 'tagActivo' | 'tagTipo' | 'objeto' | 'ultimoContador'> | null> {
+): Promise<LocalResuelto | null> {
   const filas = await db
     .select({
       localId: locales.id,
@@ -137,7 +145,6 @@ export async function resolverLocalPorSlug(
       localNombre: locales.nombre,
       zonaHoraria: locales.zonaHoraria,
       whatsapp: locales.whatsapp,
-      googleMapsUrl: locales.googleMapsUrl,
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
       localActivo: locales.activo,

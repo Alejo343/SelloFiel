@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { MarcoPanel } from '@/componentes/marco-panel';
+import { SelectorSucursal } from '@/componentes/selector-sucursal';
 import { exigirSesion } from '@/lib/cookies-panel';
 import { listarChips } from '@/servicios/chips';
 import { obtenerLocalDelPanel } from '@/servicios/panel';
+import { listarSucursales } from '@/servicios/sucursales';
 
 import { accionCrearChip } from './acciones';
 import { NOMBRE_TIPO } from './tipos';
@@ -20,7 +22,11 @@ export default async function PaginaChips({ searchParams }: PageProps<'/panel/ch
   const local = await obtenerLocalDelPanel(sesion.localId);
   if (!local) notFound();
 
-  const chips = await listarChips(sesion.localId);
+  const [chips, sedes] = await Promise.all([
+    listarChips(sesion.localId),
+    listarSucursales(sesion.localId),
+  ]);
+  const variasSedes = sedes.length > 1;
 
   return (
     <MarcoPanel localNombre={local.nombre} volver={{ href: '/panel', texto: 'Volver al panel' }}>
@@ -46,6 +52,7 @@ export default async function PaginaChips({ searchParams }: PageProps<'/panel/ch
             <option value="pantalla">Pantalla de caja: código que cambia solo</option>
           </select>
         </div>
+        <SelectorSucursal sucursales={sedes} etiqueta="¿En qué sucursal?" />
         <button type="submit">Registrar</button>
       </form>
 
@@ -59,6 +66,7 @@ export default async function PaginaChips({ searchParams }: PageProps<'/panel/ch
                 <Link href={`/panel/chips/${chip.id}`}>{chip.objeto ?? 'Sin nombre'}</Link>
               </span>
               <span className="fila__meta">
+                {variasSedes && `${chip.sucursalNombre} · `}
                 {NOMBRE_TIPO[chip.tipo]} ·{' '}
                 {chip.ultimoUso
                   ? `último sello: ${chip.ultimoUso.toISOString().slice(0, 10)}`

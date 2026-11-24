@@ -89,9 +89,6 @@ export interface LocalDelPanel {
   logoUrl: string | null;
   colorPrimario: string;
   whatsapp: string | null;
-  googleMapsUrl: string | null;
-  lat: string | null;
-  lng: string | null;
   zonaHoraria: string;
   sellosObjetivo: number;
   premio: string;
@@ -112,9 +109,6 @@ export async function obtenerLocalDelPanel(
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
       whatsapp: locales.whatsapp,
-      googleMapsUrl: locales.googleMapsUrl,
-      lat: locales.lat,
-      lng: locales.lng,
       zonaHoraria: locales.zonaHoraria,
       sellosObjetivo: programas.sellosObjetivo,
       premio: programas.premio,
@@ -354,9 +348,6 @@ export async function actualizarPrograma(
 export interface CambiosLocal {
   nombre?: string;
   whatsapp?: string | null;
-  googleMapsUrl?: string | null;
-  lat?: string | null;
-  lng?: string | null;
   logoUrl?: string | null;
   colorPrimario?: string;
 }
@@ -385,6 +376,7 @@ export async function listarTags(localId: string, db: BaseDeDatos = dbPorDefecto
       activo: tags.activo,
       tipo: tags.tipo,
       ultimoContador: tags.ultimoContador,
+      sucursalId: tags.sucursalId,
     })
     .from(tags)
     .where(eq(tags.localId, localId))
