@@ -136,6 +136,30 @@ export const usuariosLocal = pgTable('usuarios_local', {
   email: text('email').notNull().unique(),
   hashContrasena: text('hash_contrasena').notNull(),
   nombre: text('nombre').notNull(),
+  /**
+   * La contraseña la creó un administrador y el dueño todavía no la cambió.
+   * Mientras esté en true, el panel le pide cambiarla: una contraseña que pasó
+   * por las manos de otra persona no debería quedarse.
+   */
+  debeCambiarContrasena: boolean('debe_cambiar_contrasena').notNull().default(false),
+  activo: boolean('activo').notNull().default(true),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/* ---------------------------------------------------------- administradores */
+
+/**
+ * Los administradores de Sello Fiel: quienes crean locales y sus usuarios.
+ *
+ * Tabla aparte de `usuarios_local` a propósito. Un administrador no es un dueño
+ * con permisos de más: tiene otra sesión, otra cookie y otras pantallas. Si se
+ * mezclaran, un fallo en el panel de un local podría abrir todos los demás.
+ */
+export const administradores = pgTable('administradores', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  hashContrasena: text('hash_contrasena').notNull(),
+  nombre: text('nombre').notNull(),
   activo: boolean('activo').notNull().default(true),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
 });

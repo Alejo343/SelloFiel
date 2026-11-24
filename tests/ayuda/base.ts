@@ -37,7 +37,7 @@ export async function abrirBaseDePruebas() {
     /** Deja todas las tablas vacías. */
     async limpiar() {
       await cliente`truncate table sellos, canjes, mensajes, alertas_fraude, tarjetas,
-                                   clientes, tags, plantillas, programas, usuarios_local, locales
+                                   clientes, tags, plantillas, programas, usuarios_local, locales, administradores
                              restart identity cascade`;
     },
     async cerrar() {

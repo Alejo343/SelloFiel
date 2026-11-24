@@ -6,6 +6,8 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import { debeCambiarContrasena } from '@/servicios/admin';
+
 import {
   crearTokenPanel,
   leerTokenPanel,
@@ -26,9 +28,21 @@ export async function sesionActual(): Promise<SesionPanel | null> {
  * página nueva se olvida de llamarla, no lee datos, porque los servicios
  * exigen el localId que solo sale de acá.
  */
-export async function exigirSesion(): Promise<SesionPanel> {
+export async function exigirSesion(
+  opciones: { permitirContrasenaTemporal?: boolean } = {},
+): Promise<SesionPanel> {
   const sesion = await sesionActual();
   if (!sesion) redirect('/panel/entrar');
+
+  /**
+   * Si la contraseña la creó un administrador, el dueño no puede usar el
+   * panel hasta cambiarla: pasó por las manos de otra persona, normalmente
+   * por WhatsApp. La única pantalla permitida es la de cambiarla.
+   */
+  if (!opciones.permitirContrasenaTemporal && (await debeCambiarContrasena(sesion.usuarioId))) {
+    redirect('/panel/cuenta');
+  }
+
   return sesion;
 }
 

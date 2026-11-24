@@ -40,6 +40,14 @@ caracteres); los de la semilla (`tag-esquina-caja`) se adivinan y solo sirven pa
 David compró NTAG215 (2026-11-24): misma seguridad que el 213, una URL fija. Hay que **bloquearlos**
 en NFC Tools después de probarlos, o cualquiera con un celular podría reescribirlos.
 
+**Administración (`/admin`)**: tabla `administradores` aparte de `usuarios_local`, con su propia
+cookie (`sf_admin`) y prefijo de firma: un token de dueño no sirve como token de admin. David es
+el administrador (davidsupremoxd@gmail.com). Para crear otro o recuperar el acceso:
+`npm run admin:crear -- correo "Nombre"` (genera la contraseña y la muestra una vez).
+Al crear un local se genera la contraseña temporal del dueño, que **nunca viaja en la URL** (iría
+al historial y a los registros del servidor web): vuelve en el estado de la acción. El dueño queda
+obligado a cambiarla (`usuarios_local.debe_cambiar_contrasena`) antes de usar su panel.
+
 **Errores del navegador**: no dejan rastro en el servidor por sí solos. `PantallaError`
 (`error.tsx` y `global-error.tsx`) muestra una pantalla en español con "Reintentar" y envía el
 error a `/api/errores`, que lo escribe en el registro con el prefijo `[cliente]`. Para buscarlos:

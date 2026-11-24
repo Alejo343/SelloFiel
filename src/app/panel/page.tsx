@@ -116,6 +116,9 @@ export default async function PaginaPanel() {
           <li>
             <Link href="/panel/alertas">Cosas para revisar ({alertas})</Link>
           </li>
+          <li>
+            <Link href="/panel/cuenta">Cambiar mi contraseña</Link>
+          </li>
         </ul>
       </nav>
 

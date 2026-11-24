@@ -6,6 +6,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { crearConexion } from '../../src/db';
 import { locales, sellos } from '../../src/db/schema';
+import { generarMensajes } from '../../src/servicios/mensajes';
 
 /**
  * Auditoría de accesibilidad con axe, el estándar de facto.
@@ -112,11 +113,35 @@ test.describe('panel del dueño', () => {
     ['chips', '/panel/chips'],
   ] as const) {
     test(nombre, async ({ page }) => {
+      if (ruta === '/panel/mensajes') {
+        // Con mensajes pendientes de verdad: vacía, la bandeja no muestra sus
+        // etiquetas, y un fallo de contraste en ellas pasó desapercibido.
+        const { cliente: sql, db } = crearConexion(process.env.DATABASE_URL, 1);
+        try {
+          await generarMensajes({}, db);
+        } finally {
+          await sql.end();
+        }
+      }
       await entrarAlPanel(page);
       await page.goto(ruta);
       await auditar(page, nombre);
     });
   }
+});
+
+test.describe('panel de administrador', () => {
+  test('login y lista de locales', async ({ page }) => {
+    await page.goto('/admin/entrar');
+    await auditar(page, 'login admin');
+    await page.getByLabel('Correo').fill('admin@sellofiel.test');
+    await page.getByLabel('Contraseña').fill('sellofiel2026');
+    await page.getByRole('button', { name: /entrar/i }).click();
+    await expect(page).toHaveURL(/\/admin$/);
+    await auditar(page, 'locales');
+    await page.goto('/admin/locales/nuevo');
+    await auditar(page, 'nuevo local');
+  });
 });
 
 test.describe('cualquier color que elija el local queda legible', () => {

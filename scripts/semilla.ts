@@ -16,6 +16,7 @@ import 'dotenv/config';
 import { crearConexion } from '../src/db';
 import { hashearContrasena } from '../src/lib/contrasena';
 import {
+  administradores,
   clientes,
   locales,
   plantillas,
@@ -57,7 +58,7 @@ async function sembrar() {
   try {
     // Se vacía en orden inverso a las dependencias.
     await sql`truncate table sellos, canjes, mensajes, alertas_fraude, tarjetas,
-                             clientes, tags, plantillas, programas, usuarios_local, locales
+                             clientes, tags, plantillas, programas, usuarios_local, locales, administradores
                        restart identity cascade`;
 
     /* ----------------------------------------------- local 1: La Esquina */
@@ -89,6 +90,12 @@ async function sembrar() {
     });
 
     const hashDemo = await hashearContrasena(CONTRASENA_DEMO);
+
+    await db.insert(administradores).values({
+      email: 'admin@sellofiel.test',
+      nombre: 'Administrador de prueba',
+      hashContrasena: hashDemo,
+    });
 
     await db.insert(usuariosLocal).values({
       localId: esquina.id,
@@ -350,6 +357,7 @@ async function sembrar() {
     console.log('');
     console.log('  Sello Fiel — Pruebas: local real de Google Wallet, 5/5 sellos, ids fijos.');
     console.log('');
+    console.log(`  Admin: admin@sellofiel.test / ${CONTRASENA_DEMO}`);
     console.log(`  Panel: dueno@laesquina.test / ${CONTRASENA_DEMO}`);
     console.log(`         dueno@cafevecino.test / ${CONTRASENA_DEMO}`);
   } finally {
