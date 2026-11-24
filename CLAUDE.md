@@ -34,6 +34,12 @@ graves de WCAG 2.1 AA, incluido con colores de local extremos (amarillo pálido,
 de pruebas; con `COLOR_LOCAL=#ffe066` prueba otro color. **En diseño, mirar las capturas**: las
 pruebas dicen si funciona, no si se ve bien.
 
+**Chips (`/panel/chips`)**: el dueño registra cada tag, copia su dirección para grabarla con NFC
+Tools y lo da de baja si se pierde. Los tokens nuevos son **aleatorios** (`generarToken`, 16
+caracteres); los de la semilla (`tag-esquina-caja`) se adivinan y solo sirven para demostración.
+David compró NTAG215 (2026-11-24): misma seguridad que el 213, una URL fija. Hay que **bloquearlos**
+en NFC Tools después de probarlos, o cualquiera con un celular podría reescribirlos.
+
 **Nunca mostrar números de fase al usuario** ("llega en la Fase 7"). Son jerga interna y además
 quedan desactualizados.
 

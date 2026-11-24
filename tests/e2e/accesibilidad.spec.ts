@@ -109,6 +109,7 @@ test.describe('panel del dueño', () => {
     ['textos', '/panel/plantillas'],
     ['pantalla de la caja', '/panel/pantalla'],
     ['alertas', '/panel/alertas'],
+    ['chips', '/panel/chips'],
   ] as const) {
     test(nombre, async ({ page }) => {
       await entrarAlPanel(page);
