@@ -236,3 +236,53 @@ test('salir cierra la sesión', async ({ page }) => {
   await page.goto('/panel/clientes');
   await expect(page).toHaveURL(/\/panel\/entrar$/);
 });
+
+test.describe('descargar la base de clientes', () => {
+  test('sin sesión no se descarga nada', async ({ request }) => {
+    const r = await request.get('/panel/exportar', { maxRedirects: 0 });
+    expect(r.status()).toBeGreaterThanOrEqual(300);
+    expect(r.status()).toBeLessThan(400);
+    expect(r.headers()['content-disposition']).toBeUndefined();
+  });
+
+  test('el dueño descarga SOLO sus clientes, como adjunto y sin caché', async ({ page }) => {
+    await entrarAlPanel(page);
+    const r = await page.request.get('/panel/exportar');
+    expect(r.status()).toBe(200);
+    expect(r.headers()['content-disposition']).toMatch(/^attachment; filename="clientes-la-esquina-/);
+    expect(r.headers()['cache-control']).toContain('no-store');
+
+    const texto = await r.text();
+    expect(texto.startsWith('﻿Nombre;WhatsApp')).toBe(true);
+    expect(texto).toContain('Marta Fiel');
+    expect(texto).toContain('Pedro Baja');
+    // Aislamiento: Sofía es de Café Vecino.
+    expect(texto).not.toContain('Sofía Vecina');
+  });
+
+  test('un nombre con fórmula sale neutralizado para Excel', async ({ page }) => {
+    const { cliente: sql, db } = crearConexion(process.env.DATABASE_URL, 1);
+    const nombre = '=HYPERLINK("http://malo")';
+    try {
+      const [local] = await db.select().from(locales).where(eq(locales.slug, 'la-esquina'));
+      await db.insert(clientes).values({
+        localId: local.id,
+        nombre,
+        telefono: `+57300${Math.floor(Math.random() * 9000000) + 1000000}`,
+        consentimientoEn: new Date(),
+        consentimientoVersion: 'v1',
+      });
+    } finally {
+      await sql.end();
+    }
+    await entrarAlPanel(page);
+    const texto = await (await page.request.get('/panel/exportar')).text();
+    expect(texto).toContain(`"'=HYPERLINK(""http://malo"")"`);
+  });
+
+  test('el enlace está en la lista de clientes', async ({ page }) => {
+    await entrarAlPanel(page);
+    await page.goto('/panel/clientes');
+    await expect(page.getByRole('link', { name: /descargar mi base/i })).toHaveAttribute('href', '/panel/exportar');
+  });
+});

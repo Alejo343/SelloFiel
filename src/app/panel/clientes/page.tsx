@@ -27,6 +27,11 @@ export default async function PaginaClientes({ searchParams }: PageProps<'/panel
     <MarcoPanel localNombre={local.nombre} volver={{ href: '/panel', texto: 'Volver al panel' }}>
       <h1>Mis clientes</h1>
 
+      {/* Un <a> normal y no un Link: es una descarga, no una navegación. */}
+      <a href="/panel/exportar" className="boton boton--secundario" download>
+        Descargar mi base de clientes (Excel)
+      </a>
+
       <form method="get" className="hoja">
         <div className="campo">
           <label htmlFor="q">Buscar por nombre o teléfono</label>

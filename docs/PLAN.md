@@ -345,7 +345,8 @@ inspiraron todo esto venden **una sola cosa**.
 - Campañas masivas segmentadas ("Día de la pizza").
 - Multi-sucursal con tarjeta compartida entre locales del mismo dueño.
 - Panel de dueño sobre varias sucursales.
-- Exportar la base de clientes.
+- ✅ Exportar la base de clientes (`/panel/exportar`, CSV para Excel, con la fecha y versión del
+  consentimiento de cada uno; celdas con fórmulas neutralizadas). 2026-11-24.
 - Página de venta y material para mostrar en los locales.
 - Evaluar Apple Wallet y WhatsApp Cloud API con datos reales de uso en la mano.
 

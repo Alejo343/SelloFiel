@@ -390,3 +390,35 @@ export async function listarTags(localId: string, db: BaseDeDatos = dbPorDefecto
     .where(eq(tags.localId, localId))
     .orderBy(tags.creadoEn);
 }
+
+/* ---------------------------------------------------------- exportar */
+
+/**
+ * La base de clientes completa del local, para exportar (RF-33).
+ *
+ * Incluye la fecha y la versión del consentimiento de cada cliente: si el
+ * local se lleva su base, se lleva también la prueba de que cada persona
+ * autorizó el uso de sus datos (RL-02). Sin eso, la base no le sirve
+ * legalmente para escribirles.
+ */
+export async function clientesParaExportar(localId: string, db: BaseDeDatos = dbPorDefecto) {
+  return db
+    .select({
+      nombre: clientes.nombre,
+      telefono: clientes.telefono,
+      email: clientes.email,
+      fechaNacimiento: clientes.fechaNacimiento,
+      sellosDisponibles: sql<number>`count(${sellos.id}) filter (where ${sellos.canjeId} is null)::int`,
+      visitasTotales: sql<number>`count(${sellos.id})::int`,
+      ultimaVisita: sql<string | null>`max(${sellos.fecha})`,
+      creadoEn: clientes.creadoEn,
+      consentimientoEn: clientes.consentimientoEn,
+      consentimientoVersion: clientes.consentimientoVersion,
+      bajaEn: clientes.bajaEn,
+    })
+    .from(clientes)
+    .leftJoin(sellos, eq(sellos.clienteId, clientes.id))
+    .where(eq(clientes.localId, localId))
+    .groupBy(clientes.id)
+    .orderBy(clientes.creadoEn);
+}
