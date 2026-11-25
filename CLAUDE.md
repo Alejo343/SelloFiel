@@ -235,6 +235,15 @@ operación idempotente. No "arreglarlo" convirtiéndolo en un POST: rompería el
 
 ## Decisiones tomadas
 
+- **Decidido por David el 2026-11-25. La tarjeta de cada local es un SERVICIO de David, no
+  autoservicio del dueño.** David le pide a cada local sus imágenes, logos y material, y la tarjeta
+  se diseña con Claude. Si el local quiere cambiarla, se lo pide a David. **No construir un editor
+  de diseño en el panel del dueño**; no es una tarea pendiente.
+- **Decidido por David el 2026-11-25. El premio, los sellos y los chips de cada local se definen con
+  su dueño al incorporarlo.** David propone la idea y la acuerdan entre los dos. Por eso los
+  chips no se bloquean hasta entonces. Nada de esto es software pendiente: es la incorporación
+  de cada local, y el software ya la soporta (`/admin` crea el local y `/panel` se configura).
+
 - **Multi-local (SaaS)** desde el inicio. Todas las tablas llevan `local_id` y el aislamiento
   se prueba, no se asume.
 - **Solo Google Wallet** al principio. Apple cuesta 99 USD/año y obliga al PassKit Web Service.

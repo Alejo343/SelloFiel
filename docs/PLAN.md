@@ -243,6 +243,12 @@ de prueba y con la anotación "[TEST ONLY]".
 ### Fase 7 — NFC físico
 *La única fase con costo en hardware y con pasos fuera de la pantalla.*
 
+> **Estado al 2026-11-25: software terminado.** Están hechos la gestión de chips desde el panel,
+> los tokens aleatorios y la baja de un chip, y el NTAG215 se probó con éxito. Lo que falta es por
+> local, al incorporarlo: grabar sus chips, probarlos en Android e iPhone y bloquearlos. **No se
+> bloquean antes** porque el premio y los sellos se acuerdan con cada dueño (decisión de David,
+> 2026-11-25). No cuenta como software pendiente.
+
 **Entregables**
 - Arrancar con **NTAG213**: barato, se consigue local y no hace falta ninguna app para grabarlo.
   **Pero no es más seguro que un QR impreso**: guarda una URL fija que cualquier celular con NFC
@@ -355,6 +361,10 @@ inspiraron todo esto venden **una sola cosa**.
   consentimiento de cada uno; celdas con fórmulas neutralizadas). 2026-11-24.
 - Página de venta y material para mostrar en los locales.
 - Evaluar Apple Wallet y WhatsApp Cloud API con datos reales de uso en la mano.
+- **Diseño de la tarjeta de cada local: es un servicio, no software** (decisión de David,
+  2026-11-25). David recoge las imágenes y logos del local y se diseña con Claude. Los cambios los
+  pide el local a David. No hay editor de diseño para el dueño, a propósito. Las muestras
+  están en `sellofiel.app/muestras/tarjetas/` y `scripts/muestra-wallet.ts` las sube a Wallet.
 
 ---
 
