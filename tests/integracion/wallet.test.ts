@@ -11,6 +11,7 @@ import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { colaWallet, tarjetas } from '../../src/db/schema';
+import { guardarDisenoTarjeta } from '../../src/servicios/admin';
 import { altaCliente } from '../../src/servicios/clientes';
 import { canjear, sumarSello } from '../../src/servicios/sellos';
 import {
@@ -475,5 +476,51 @@ describe('un local que no emite pases no toca Google', () => {
     if (r.resultado !== 'sumado') return;
     expect(r.estado.sellos).toBe(1);
     expect(emisor.llamadas).toHaveLength(0);
+  });
+});
+
+describe('diseño a medida de la tarjeta', () => {
+  const PLANTILLA = 'https://sellofiel.app/tarjetas/x/v1/sellos-{sellos}.jpg';
+
+  it('al guardarlo, las tarjetas ya emitidas cambian de imagen sin esperar otro sello', async () => {
+    // El cliente ya tiene su tarjeta en Wallet.
+    await encolar({ localId: local.localId, clienteId, tipo: 'crear_objeto' }, base.db);
+    await procesarCola({}, base.db);
+    emisor.limpiar();
+
+    const r = await guardarDisenoTarjeta(
+      local.localId,
+      { plantillaImagenUrl: PLANTILLA, logoAnchoUrl: 'https://sellofiel.app/tarjetas/x/v1/logo.png' },
+      base.db,
+    );
+    expect(r).toEqual({ ok: true, tarjetasPorActualizar: 1 });
+
+    await procesarCola({}, base.db);
+    const clase = emisor.llamadas.find((l) => l.operacion === 'crear_clase')?.cuerpo as {
+      wideProgramLogo?: unknown;
+    };
+    expect(clase.wideProgramLogo).toBeDefined();
+    const parche = emisor.llamadas.find((l) => l.operacion === 'actualizar_sellos')?.cuerpo as {
+      heroImage?: { sourceUri: { uri: string } };
+    };
+    expect(parche.heroImage?.sourceUri.uri).toBe('https://sellofiel.app/tarjetas/x/v1/sellos-0.jpg');
+  });
+
+  it('cada sello nuevo lleva la imagen de su cantidad', async () => {
+    await guardarDisenoTarjeta(local.localId, { plantillaImagenUrl: PLANTILLA }, base.db);
+    await procesarCola({}, base.db);
+    emisor.limpiar();
+
+    await sumarSello({ ...opcionesSello(), ahora: instante('2026-11-20') }, base.db);
+    await procesarCola({}, base.db);
+    const parche = emisor.llamadas.find((l) => l.operacion === 'actualizar_sellos')?.cuerpo as {
+      heroImage?: { sourceUri: { uri: string } };
+    };
+    expect(parche.heroImage?.sourceUri.uri).toMatch(/sellos-1\.jpg$/);
+  });
+
+  it('rechaza direcciones que no son https', async () => {
+    const r = await guardarDisenoTarjeta(local.localId, { plantillaImagenUrl: 'http://x/{sellos}.jpg' }, base.db);
+    expect(r.ok).toBe(false);
   });
 });

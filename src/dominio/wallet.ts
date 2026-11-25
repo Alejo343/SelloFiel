@@ -58,6 +58,67 @@ export interface DatosClase {
    */
   logoUrl?: string | null;
   colorPrimario?: string | null;
+  /**
+   * Logo ancho (1280×400, PNG transparente). Si está, en el celular reemplaza
+   * al logo redondo y al nombre del encabezado. Parte del diseño a medida.
+   */
+  logoAnchoUrl?: string | null;
+}
+
+/* ------------------------------------------------ diseño a medida */
+
+/** El marcador que la plantilla de imagen cambia por el número de sellos. */
+export const MARCADOR_SELLOS = '{sellos}';
+
+/**
+ * La imagen principal de la tarjeta para un estado concreto.
+ *
+ * El diseño de cada local se prepara como una imagen por cantidad de sellos
+ * (de 0 al objetivo), publicadas con un patrón de nombre:
+ * `https://sellofiel.app/tarjetas/el-local/v1/sellos-{sellos}.jpg`. Por encima
+ * del objetivo se usa la del objetivo: el cliente que junta sellos de más sin
+ * canjear sigue viendo "premio listo".
+ *
+ * Una plantilla sin marcador es una imagen fija, la misma para todos.
+ */
+export function urlImagenDelEstado(
+  plantilla: string | null | undefined,
+  estado: Pick<EstadoClub, 'sellos' | 'objetivo'>,
+): string | null {
+  if (!plantilla) return null;
+  const n = Math.max(0, Math.min(estado.sellos, estado.objetivo));
+  return plantilla.split(MARCADOR_SELLOS).join(String(n));
+}
+
+/** Todas las imágenes que tiene que haber publicadas para un objetivo dado. */
+export function imagenesNecesarias(plantilla: string, objetivo: number): string[] {
+  if (!plantilla.includes(MARCADOR_SELLOS)) return [plantilla];
+  return Array.from({ length: objetivo + 1 }, (_, n) => urlImagenDelEstado(plantilla, { sellos: n, objetivo })!);
+}
+
+/**
+ * Google descarga las imágenes él mismo: tienen que ser HTTPS públicas. Se
+ * valida antes de guardar, porque un error acá rompe la tarjeta de todos los
+ * clientes del local a la vez.
+ */
+export function validarDisenoTarjeta(datos: {
+  logoAnchoUrl?: string | null;
+  plantillaImagenUrl?: string | null;
+}): { ok: true } | { ok: false; motivo: string } {
+  for (const [campo, valor] of [
+    ['El logo ancho', datos.logoAnchoUrl],
+    ['La imagen de la tarjeta', datos.plantillaImagenUrl],
+  ] as const) {
+    if (!valor) continue;
+    let url: URL;
+    try {
+      url = new URL(valor.split(MARCADOR_SELLOS).join('0'));
+    } catch {
+      return { ok: false, motivo: `${campo}: la dirección no es válida` };
+    }
+    if (url.protocol !== 'https:') return { ok: false, motivo: `${campo}: tiene que empezar por https://` };
+  }
+  return { ok: true };
 }
 
 export function construirClase(datos: DatosClase) {
@@ -75,6 +136,16 @@ export function construirClase(datos: DatosClase) {
     programName: `Club de ${datos.localNombre}`,
     reviewStatus: 'UNDER_REVIEW',
     hexBackgroundColor: datos.colorPrimario ?? '#111111',
+    ...(datos.logoAnchoUrl
+      ? {
+          wideProgramLogo: {
+            sourceUri: { uri: datos.logoAnchoUrl },
+            contentDescription: {
+              defaultValue: { language: 'es', value: datos.localNombre },
+            },
+          },
+        }
+      : {}),
 
     // Lo que el cliente ve como "premio" en la tarjeta.
     rewardsTierLabel: 'Premio',
@@ -139,6 +210,21 @@ export interface DatosObjeto {
   premio: string;
   /** URL de la tarjeta web, para el código de barras y el enlace */
   urlTarjeta: string;
+  /** Plantilla de la imagen principal del local, si tiene diseño a medida */
+  plantillaImagenUrl?: string | null;
+}
+
+function imagenPrincipal(plantilla: string | null | undefined, estado: EstadoClub) {
+  const uri = urlImagenDelEstado(plantilla, estado);
+  if (!uri) return {};
+  return {
+    heroImage: {
+      sourceUri: { uri },
+      contentDescription: {
+        defaultValue: { language: 'es', value: `${estado.sellos} de ${estado.objetivo} sellos` },
+      },
+    },
+  };
 }
 
 export function construirObjeto(datos: DatosObjeto) {
@@ -146,6 +232,8 @@ export function construirObjeto(datos: DatosObjeto) {
     id: idDeObjeto(datos.issuerId, datos.clienteId),
     classId: idDeClase(datos.issuerId, datos.localId),
     state: 'ACTIVE',
+
+    ...imagenPrincipal(datos.plantillaImagenUrl, datos.estado),
 
     accountName: datos.clienteNombre,
     // El identificador que el local ve si tiene que buscar al cliente.
@@ -227,8 +315,11 @@ export function construirParcheSellos(
   estado: EstadoClub,
   premio: string,
   urlTarjeta: string,
+  /** Con diseño a medida, la imagen cambia con cada sello */
+  plantillaImagenUrl?: string | null,
 ) {
   return {
+    ...imagenPrincipal(plantillaImagenUrl, estado),
     loyaltyPoints: {
       label: 'Sellos',
       balance: { int: estado.sellos },

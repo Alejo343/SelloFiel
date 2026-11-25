@@ -89,6 +89,8 @@ export interface LocalDelPanel {
   logoUrl: string | null;
   colorPrimario: string;
   whatsapp: string | null;
+  /** Diseño a medida de la tarjeta; lo pone el administrador */
+  plantillaImagenUrl: string | null;
   zonaHoraria: string;
   sellosObjetivo: number;
   premio: string;
@@ -109,6 +111,7 @@ export async function obtenerLocalDelPanel(
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
       whatsapp: locales.whatsapp,
+      plantillaImagenUrl: locales.plantillaImagenUrl,
       zonaHoraria: locales.zonaHoraria,
       sellosObjetivo: programas.sellosObjetivo,
       premio: programas.premio,

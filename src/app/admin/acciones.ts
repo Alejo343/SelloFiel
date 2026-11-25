@@ -3,16 +3,21 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { imagenesNecesarias, validarDisenoTarjeta } from '@/dominio/wallet';
+import { imagenesQueFallan } from '@/lib/comprobar-imagenes';
 import { cerrarSesionAdmin, exigirAdmin, iniciarSesionAdmin } from '@/lib/cookies-admin';
-import { cambiarEstadoChip, crearChip } from '@/servicios/chips';
-import { resolverSucursalElegida } from '@/servicios/sucursales';
+import { sincronizarWalletPronto } from '@/lib/sincronizar-wallet';
 import {
   autenticarAdmin,
   cambiarActivoLocal,
   cambiarEmitePases,
   crearLocalConDueno,
+  guardarDisenoTarjeta,
   restablecerContrasenaDueno,
+  sellosObjetivoDe,
 } from '@/servicios/admin';
+import { cambiarEstadoChip, crearChip } from '@/servicios/chips';
+import { resolverSucursalElegida } from '@/servicios/sucursales';
 
 export interface EstadoEntrarAdmin {
   error?: string;
@@ -134,4 +139,51 @@ export async function accionBajaChipAdmin(datos: FormData): Promise<void> {
   // un salto dentro de la misma página y no vuelve a pedir los datos, así que
   // el chip recién creado no aparecía en la lista.
   redirect(`/admin/locales/${localId}`);
+}
+
+export interface EstadoDiseno {
+  ok?: string;
+  error?: string;
+  /** Lo escrito, para no perderlo si hubo error */
+  valores?: { logoAnchoUrl: string; plantillaImagenUrl: string };
+}
+
+/**
+ * Guarda el diseño a medida de la tarjeta de un local. Antes comprueba que
+ * TODAS las imágenes estén publicadas: una que falte deja sin imagen la
+ * tarjeta de quien llegue a esa cantidad de sellos.
+ */
+export async function accionGuardarDiseno(_previo: EstadoDiseno, datos: FormData): Promise<EstadoDiseno> {
+  await exigirAdmin();
+  const localId = String(datos.get('localId') ?? '');
+  const valores = {
+    logoAnchoUrl: String(datos.get('logoAnchoUrl') ?? '').trim(),
+    plantillaImagenUrl: String(datos.get('plantillaImagenUrl') ?? '').trim(),
+  };
+
+  const validacion = validarDisenoTarjeta(valores);
+  if (!validacion.ok) return { error: validacion.motivo, valores };
+
+  const objetivo = await sellosObjetivoDe(localId);
+  if (objetivo === null) return { error: 'No se encontró el local', valores };
+
+  const urls = [
+    ...(valores.logoAnchoUrl ? [valores.logoAnchoUrl] : []),
+    ...(valores.plantillaImagenUrl ? imagenesNecesarias(valores.plantillaImagenUrl, objetivo) : []),
+  ];
+  const fallan = await imagenesQueFallan(urls);
+  if (fallan.length > 0) {
+    return {
+      error: `No se encontraron ${fallan.length} ${fallan.length === 1 ? 'imagen' : 'imágenes'}: ${fallan.slice(0, 3).join(', ')}${fallan.length > 3 ? '…' : ''}`,
+      valores,
+    };
+  }
+
+  const r = await guardarDisenoTarjeta(localId, valores);
+  if (!r.ok) return { error: r.motivo, valores };
+  sincronizarWalletPronto(localId);
+  return {
+    ok: `Diseño guardado. Se actualizarán ${r.tarjetasPorActualizar} ${r.tarjetasPorActualizar === 1 ? 'tarjeta' : 'tarjetas'} ya emitidas.`,
+    valores,
+  };
 }

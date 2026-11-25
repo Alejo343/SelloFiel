@@ -31,6 +31,8 @@ export interface TagResuelto {
   /** Para pintar las pantallas del cliente con la marca del local */
   logoUrl: string | null;
   colorPrimario: string;
+  /** Diseño a medida de la tarjeta, con {sellos} en la dirección */
+  plantillaImagenUrl: string | null;
   sellosObjetivo: number;
   premio: string;
   beneficioBienvenida: string | null;
@@ -67,6 +69,7 @@ export async function resolverTag(
       whatsapp: locales.whatsapp,
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
+      plantillaImagenUrl: locales.plantillaImagenUrl,
       localActivo: locales.activo,
       sellosObjetivo: programas.sellosObjetivo,
       premio: programas.premio,
@@ -111,6 +114,7 @@ export async function resolverLocalPorId(
       whatsapp: locales.whatsapp,
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
+      plantillaImagenUrl: locales.plantillaImagenUrl,
       localActivo: locales.activo,
       sellosObjetivo: programas.sellosObjetivo,
       premio: programas.premio,
@@ -147,6 +151,7 @@ export async function resolverLocalPorSlug(
       whatsapp: locales.whatsapp,
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
+      plantillaImagenUrl: locales.plantillaImagenUrl,
       localActivo: locales.activo,
       sellosObjetivo: programas.sellosObjetivo,
       premio: programas.premio,

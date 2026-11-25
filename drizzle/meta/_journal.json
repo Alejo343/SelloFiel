@@ -71,6 +71,13 @@
       "when": 1795556692264,
       "tag": "0009_sucursales",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795646331951,
+      "tag": "0010_diseno_tarjeta",
+      "breakpoints": true
     }
   ]
 }

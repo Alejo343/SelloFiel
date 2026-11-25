@@ -365,6 +365,8 @@ inspiraron todo esto venden **una sola cosa**.
   2026-11-25). David recoge las imágenes y logos del local y se diseña con Claude. Los cambios los
   pide el local a David. No hay editor de diseño para el dueño, a propósito. Las muestras
   están en `sellofiel.app/muestras/tarjetas/` y `scripts/muestra-wallet.ts` las sube a Wallet.
+  ✅ El software ya lo soporta (2026-11-25): logo ancho e imagen por cantidad de sellos por
+  local, configurables desde `/admin`, y `scripts/generar-tarjeta.mjs` para generar las imágenes.
 
 ---
 

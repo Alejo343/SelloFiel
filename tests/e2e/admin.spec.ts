@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import { expect, test, type Page } from '@playwright/test';
 
 /**
@@ -87,4 +89,37 @@ test('el administrador registra un chip del local desde su ficha', async ({ page
   const fila = page.locator('li', { hasText: 'Barril del mozo 2' });
   await expect(fila).toBeVisible();
   await expect(fila.locator('code')).toContainText(/\/t\/[A-Za-z0-9_-]{16}/);
+});
+
+test('el diseño de la tarjeta rechaza direcciones que Google no puede descargar', async ({ page }) => {
+  await entrarAdmin(page);
+  await page.getByRole('link', { name: 'La Esquina' }).click();
+  await page.getByLabel('Imagen principal').fill('http://inseguro.test/sellos-{sellos}.jpg');
+  await page.getByRole('button', { name: /guardar diseño/i }).click();
+  await expect(page.locator('p.error')).toContainText(/https/);
+  // Lo escrito no se pierde.
+  await expect(page.getByLabel('Imagen principal')).toHaveValue('http://inseguro.test/sellos-{sellos}.jpg');
+});
+
+test('con diseño a medida, la tarjeta web muestra la misma imagen que Wallet', async ({ page }) => {
+  const { crearConexion } = await import('../../src/db');
+  const { locales } = await import('../../src/db/schema');
+  const { eq } = await import('drizzle-orm');
+  const { cliente: sql, db } = crearConexion(process.env.DATABASE_URL, 1);
+  try {
+    await db
+      .update(locales)
+      .set({ plantillaImagenUrl: 'https://sellofiel.app/tarjetas/prueba/v1/sellos-{sellos}.jpg' })
+      .where(eq(locales.slug, 'cafe-vecino'));
+    await page.goto('/c/cafe-vecino/alta');
+    await page.getByLabel('Tu nombre').fill('Cliente Diseño');
+    await page.getByLabel('Tu WhatsApp').fill(`30066${Math.floor(Math.random() * 90000) + 10000}`);
+    await page.getByRole('checkbox').check();
+    await page.getByRole('button', { name: /unirme al club/i }).click();
+    await expect(page).toHaveURL(/tarjeta$/);
+    await expect(page.locator('img.tarjeta-sellos__imagen')).toHaveAttribute('src', /sellos-0\.jpg$/);
+  } finally {
+    await db.update(locales).set({ plantillaImagenUrl: null }).where(eq(locales.slug, 'cafe-vecino'));
+    await sql.end();
+  }
 });

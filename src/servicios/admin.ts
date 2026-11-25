@@ -11,13 +11,24 @@ import { and, count, eq, gte, sql } from 'drizzle-orm';
 
 import { db as dbPorDefecto } from '../db';
 import { esViolacionUnica } from '../db/errores';
-import { administradores, clientes, locales, programas, sellos, sucursales, usuariosLocal } from '../db/schema';
+import {
+  administradores,
+  clientes,
+  locales,
+  programas,
+  sellos,
+  sucursales,
+  tarjetas,
+  usuariosLocal,
+} from '../db/schema';
+import { validarDisenoTarjeta } from '../dominio/wallet';
 import { normalizarColor } from '../dominio/color';
 import { validarSlug } from '../dominio/slug';
 import { normalizarTelefono } from '../dominio/telefono';
 import { hashearContrasena, verificarContrasena } from '../lib/contrasena';
 import { contrasenaTemporal } from '../lib/contrasena-temporal';
 import type { BaseDeDatos } from './tipos';
+import { encolar } from './wallet/cola';
 
 /* ------------------------------------------------------- autenticación */
 
@@ -83,6 +94,8 @@ export interface LocalDelAdmin {
   clientes: number;
   sellosDelMes: number;
   duenoEmail: string | null;
+  logoAnchoUrl: string | null;
+  plantillaImagenUrl: string | null;
   creadoEn: Date;
 }
 
@@ -121,6 +134,8 @@ export async function listarLocales(
     clientes: c.get(l.id)?.n ?? 0,
     sellosDelMes: s.get(l.id)?.n ?? 0,
     duenoEmail: d.get(l.id)?.email ?? null,
+    logoAnchoUrl: l.logoAnchoUrl,
+    plantillaImagenUrl: l.plantillaImagenUrl,
     creadoEn: l.creadoEn,
   }));
 }
@@ -304,4 +319,58 @@ export async function debeCambiarContrasena(
     .where(eq(usuariosLocal.id, usuarioId))
     .limit(1);
   return u?.debe ?? false;
+}
+
+/* ---------------------------------------------- diseño de la tarjeta */
+
+/**
+ * Guarda el diseño a medida de la tarjeta de un local y lo lleva a todas las
+ * tarjetas ya emitidas.
+ *
+ * Lo hace el administrador: el diseño es un servicio, no algo que el dueño
+ * configure solo (decisión del 2026-11-25). Las imágenes se publican antes en
+ * `sellofiel.app/tarjetas/<local>/<versión>/` con `scripts/generar-tarjeta.mjs`.
+ *
+ * Se encola la plantilla (por el logo ancho) y una actualización por cada
+ * cliente que ya guardó la tarjeta, para que cambie su imagen sin esperar a
+ * su próximo sello.
+ */
+export async function guardarDisenoTarjeta(
+  localId: string,
+  datos: { logoAnchoUrl?: string | null; plantillaImagenUrl?: string | null },
+  db: BaseDeDatos = dbPorDefecto,
+): Promise<{ ok: true; tarjetasPorActualizar: number } | { ok: false; motivo: string }> {
+  const limpio = {
+    logoAnchoUrl: datos.logoAnchoUrl?.trim() || null,
+    plantillaImagenUrl: datos.plantillaImagenUrl?.trim() || null,
+  };
+  const validacion = validarDisenoTarjeta(limpio);
+  if (!validacion.ok) return validacion;
+
+  const filas = await db.update(locales).set(limpio).where(eq(locales.id, localId)).returning({ id: locales.id });
+  if (filas.length === 0) return { ok: false, motivo: 'No se encontró el local' };
+
+  await encolar({ localId, tipo: 'crear_clase' }, db);
+
+  const conTarjeta = await db
+    .select({ clienteId: tarjetas.clienteId })
+    .from(tarjetas)
+    .innerJoin(clientes, eq(tarjetas.clienteId, clientes.id))
+    .where(and(eq(clientes.localId, localId), eq(tarjetas.plataforma, 'google')));
+
+  for (const { clienteId } of conTarjeta) {
+    await encolar({ localId, clienteId, tipo: 'actualizar_sellos' }, db);
+  }
+
+  return { ok: true, tarjetasPorActualizar: conTarjeta.length };
+}
+
+/** Cuántos sellos pide el local: define cuántas imágenes necesita su diseño. */
+export async function sellosObjetivoDe(localId: string, db: BaseDeDatos = dbPorDefecto): Promise<number | null> {
+  const [p] = await db
+    .select({ n: programas.sellosObjetivo })
+    .from(programas)
+    .where(eq(programas.localId, localId))
+    .limit(1);
+  return p?.n ?? null;
 }

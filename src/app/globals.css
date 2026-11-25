@@ -910,3 +910,11 @@ code {
     margin: 1rem auto;
   }
 }
+
+/* Diseño a medida de la tarjeta: la misma imagen que en Google Wallet */
+.tarjeta-sellos__imagen {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}

@@ -63,6 +63,21 @@ sea por marca: dos sedes el mismo día no dan dos sellos. Una sede cerrada no su
 cuentan como inactivos) y la última abierta no se puede cerrar. Todo local nace con la sede
 "Principal". La migración 0009 movió `lat`, `lng` y `google_maps_url` de `locales` a la sede.
 
+**Diseño a medida de la tarjeta** (servicio de David; ver "Decisiones tomadas"). Cada local puede
+tener `locales.logo_ancho_url` (encabezado de Wallet, 1280×400) y `locales.plantilla_imagen_url`,
+una dirección con `{sellos}` que da la imagen principal (1032×812) de cada cantidad, de 0 al
+objetivo; por encima del objetivo se usa la del objetivo. Receta:
+1. Diseñar una página que muestre SOLO la imagen en un `.hero` para `?n=` (ejemplo:
+   `sellofiel.app/muestras/tarjetas/market/?diseno=1&n=3`).
+2. `node scripts/generar-tarjeta.mjs '<url con {n}>' <objetivo> /var/www/sellofiel/tarjetas/<slug>/v1`
+3. En `/admin/locales/<id>` → "Diseño de la tarjeta": poner la plantilla
+   `https://sellofiel.app/tarjetas/<slug>/v1/sellos-{sellos}.jpg`. Antes de guardar se comprueba
+   que estén TODAS las imágenes, y al guardar se actualizan las tarjetas ya emitidas.
+Para cambiar un diseño, usar una carpeta NUEVA (v2): Google guarda las imágenes en caché por
+dirección. Con diseño, el dueño no puede cambiar la cantidad de sellos desde su panel, porque
+faltarían imágenes: lo pide a David. La tarjeta web muestra la misma imagen.
+`scripts/muestra-wallet.ts` sube tarjetas de MUESTRA a Wallet para ver un diseño en el celular.
+
 **Exportar (`/panel/exportar`)**: CSV con `;`, BOM y CRLF para que Excel en español lo abra bien;
 `celdaSegura()` neutraliza celdas que empiezan con `= + - @` (inyección de fórmulas).
 

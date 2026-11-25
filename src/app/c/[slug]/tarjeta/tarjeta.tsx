@@ -24,6 +24,8 @@ export interface PropsTarjeta {
   whatsappLocal?: string | null;
   /** Enlace para añadir la tarjeta al wallet, si ya se generó */
   enlaceWallet?: string | null;
+  /** Con diseño a medida, la misma imagen que ve en Wallet */
+  imagenDiseno?: string | null;
 }
 
 export function Tarjeta({
@@ -33,6 +35,7 @@ export function Tarjeta({
   localNombre,
   whatsappLocal,
   enlaceWallet,
+  imagenDiseno,
 }: PropsTarjeta) {
   const llenos = Math.min(estado.sellos, estado.objetivo);
   const casillas = Array.from({ length: estado.objetivo }, (_, i) => i < llenos);
@@ -51,13 +54,19 @@ export function Tarjeta({
           </p>
         </div>
 
-        <div className="sellos" aria-hidden="true">
-          {casillas.map((lleno, i) => (
-            <div key={i} className={lleno ? 'sello sello--lleno' : 'sello'}>
-              {lleno && <Sello />}
-            </div>
-          ))}
-        </div>
+        {imagenDiseno ? (
+          // La misma imagen que en Wallet, para que las dos tarjetas se vean igual.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imagenDiseno} alt="" className="tarjeta-sellos__imagen" width={1032} height={812} />
+        ) : (
+          <div className="sellos" aria-hidden="true">
+            {casillas.map((lleno, i) => (
+              <div key={i} className={lleno ? 'sello sello--lleno' : 'sello'}>
+                {lleno && <Sello />}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="tarjeta-sellos__premio">
           {estado.premioDisponible ? (

@@ -97,6 +97,16 @@ export const locales = pgTable('locales', {
    * cliente ve su tarjeta web. Lo único que no tiene es el pase del wallet.
    */
   emitePases: boolean('emite_pases').notNull().default(true),
+  /**
+   * Diseño a medida de la tarjeta (servicio de David, no autoservicio).
+   * `logoAnchoUrl`: el logo ancho del encabezado en Wallet.
+   * `plantillaImagenUrl`: la imagen principal, con `{sellos}` donde va el
+   * número, por ejemplo `https://sellofiel.app/tarjetas/x/v1/sellos-{sellos}.jpg`.
+   * Para cambiar un diseño se publica en una carpeta NUEVA (v2): Google
+   * guarda las imágenes en caché por dirección y no vería el cambio.
+   */
+  logoAnchoUrl: text('logo_ancho_url'),
+  plantillaImagenUrl: text('plantilla_imagen_url'),
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
 });
 

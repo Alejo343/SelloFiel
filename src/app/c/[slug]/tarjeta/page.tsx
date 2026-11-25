@@ -15,6 +15,7 @@ import { obtenerCliente } from '@/servicios/clientes';
 import { estadoDelClub } from '@/servicios/sellos';
 import { resolverLocalPorSlug } from '@/servicios/tags';
 import { enlaceDeTarjeta } from '@/servicios/wallet/cola';
+import { urlImagenDelEstado } from '@/dominio/wallet';
 
 import { Tarjeta } from './tarjeta';
 
@@ -54,6 +55,7 @@ export default async function PaginaTarjeta({ params }: PageProps<'/c/[slug]/tar
         localNombre={local.localNombre}
         whatsappLocal={local.whatsapp}
         enlaceWallet={enlaceWallet}
+        imagenDiseno={urlImagenDelEstado(local.plantillaImagenUrl, estado)}
       />
     </MarcoLocal>
   );

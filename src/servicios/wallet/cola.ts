@@ -170,6 +170,8 @@ async function ejecutar(
       whatsapp: locales.whatsapp,
       logoUrl: locales.logoUrl,
       colorPrimario: locales.colorPrimario,
+      logoAnchoUrl: locales.logoAnchoUrl,
+      plantillaImagenUrl: locales.plantillaImagenUrl,
       sellosObjetivo: programas.sellosObjetivo,
       premio: programas.premio,
     })
@@ -197,6 +199,7 @@ async function ejecutar(
       // Sello Fiel para no bloquear la creación de la plantilla.
       logoUrl: local.logoUrl ?? process.env.WALLET_LOGO_POR_DEFECTO ?? null,
       colorPrimario: local.colorPrimario,
+      logoAnchoUrl: local.logoAnchoUrl,
     });
     return true;
   }
@@ -226,6 +229,7 @@ async function ejecutar(
       estado,
       premio: local.premio,
       urlTarjeta,
+      plantillaImagenUrl: local.plantillaImagenUrl,
     });
     return true;
   }
@@ -239,6 +243,7 @@ async function ejecutar(
     estado,
     premio: local.premio,
     urlTarjeta,
+    plantillaImagenUrl: local.plantillaImagenUrl,
   });
 
   // Se registra la tarjeta para no volver a crearla y para saber si se logró

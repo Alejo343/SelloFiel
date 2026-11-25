@@ -3,9 +3,10 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { MARCADOR_SELLOS } from '@/dominio/wallet';
 import { normalizarTelefono } from '@/dominio/telefono';
 import { exigirSesion } from '@/lib/cookies-panel';
-import { actualizarLocal, actualizarPrograma } from '@/servicios/panel';
+import { actualizarLocal, actualizarPrograma, obtenerLocalDelPanel } from '@/servicios/panel';
 import { encolar } from '@/servicios/wallet/cola';
 
 const esquema = z.object({
@@ -71,6 +72,24 @@ export async function accionGuardarPrograma(datos: FormData): Promise<void> {
       redirect('/panel/programa?error=Ese+n%C3%BAmero+de+WhatsApp+no+parece+v%C3%A1lido');
     }
     whatsapp = normalizado.telefono;
+  }
+
+  /**
+   * Con diseño a medida hay una imagen por cantidad de sellos. Cambiar el
+   * objetivo dejaría tarjetas sin imagen (o con el número equivocado), así
+   * que ese cambio pasa por Sello Fiel, que rehace las imágenes.
+   */
+  const actual = await obtenerLocalDelPanel(sesion.localId);
+  if (
+    actual?.plantillaImagenUrl?.includes(MARCADOR_SELLOS) &&
+    actual.sellosObjetivo !== v.sellosObjetivo
+  ) {
+    redirect(
+      '/panel/programa?error=' +
+        encodeURIComponent(
+          `Tu tarjeta tiene un diseño hecho para ${actual.sellosObjetivo} sellos. Para cambiar la cantidad, escríbenos y te la ajustamos.`,
+        ),
+    );
   }
 
   await actualizarPrograma(sesion.localId, {

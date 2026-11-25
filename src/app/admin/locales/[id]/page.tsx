@@ -9,7 +9,7 @@ import { NOMBRE_TIPO } from '@/app/panel/chips/tipos';
 import { MarcoAdmin } from '@/componentes/marco-admin';
 import { SelectorSucursal } from '@/componentes/selector-sucursal';
 import { exigirAdmin } from '@/lib/cookies-admin';
-import { obtenerLocalAdmin } from '@/servicios/admin';
+import { obtenerLocalAdmin, sellosObjetivoDe } from '@/servicios/admin';
 import { direccionDelChip, listarChips } from '@/servicios/chips';
 import { listarSucursales } from '@/servicios/sucursales';
 
@@ -19,6 +19,7 @@ import {
   accionCambiarEmitePases,
   accionCrearChipAdmin,
 } from '../../acciones';
+import { DisenoTarjeta } from './diseno';
 import { RestablecerClave } from './restablecer';
 
 export default async function PaginaLocalAdmin({ params }: PageProps<'/admin/locales/[id]'>) {
@@ -28,7 +29,11 @@ export default async function PaginaLocalAdmin({ params }: PageProps<'/admin/loc
   const local = await obtenerLocalAdmin(id);
   if (!local) notFound();
 
-  const [chips, sedes] = await Promise.all([listarChips(local.id), listarSucursales(local.id)]);
+  const [chips, sedes, objetivo] = await Promise.all([
+    listarChips(local.id),
+    listarSucursales(local.id),
+    sellosObjetivoDe(local.id),
+  ]);
   const base = process.env.URL_PUBLICA ?? 'http://localhost:3011';
 
   return (
@@ -107,6 +112,16 @@ export default async function PaginaLocalAdmin({ params }: PageProps<'/admin/loc
           <SelectorSucursal sucursales={sedes} />
           <button type="submit" className="boton--secundario">Registrar</button>
         </form>
+      </section>
+
+      <section className="hoja">
+        <h2>Diseño de la tarjeta</h2>
+        <DisenoTarjeta
+          localId={local.id}
+          objetivo={objetivo ?? 10}
+          logoAnchoUrl={local.logoAnchoUrl}
+          plantillaImagenUrl={local.plantillaImagenUrl}
+        />
       </section>
 
       <section className="hoja">
