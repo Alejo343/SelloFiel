@@ -23,6 +23,13 @@ const IMG = 'https://sellofiel.app/muestras/tarjetas/market';
 
 const DISENOS = ['Monedas de oro', 'La tienda', 'La cava', 'Ícono de la casa', 'El barril', 'El corte'];
 
+/**
+ * Nombre de la imagen de cada diseño. Al cambiar un diseño se le pone un
+ * nombre NUEVO (-v2, -v3…): Google guarda las imágenes en caché por dirección
+ * y con el mismo nombre seguiría mostrando la vieja.
+ */
+const IMAGENES = ['hero-1-v2.jpg', 'hero-2.jpg', 'hero-3.jpg', 'hero-4.jpg', 'hero-5-v2.jpg', 'hero-6.jpg'];
+
 async function main() {
   const config = leerConfiguracionDelEntorno();
   if (!config) throw new Error('No hay credenciales de Google Wallet en el .env');
@@ -81,7 +88,7 @@ async function main() {
       accountId: `muestra-${i + 1}`,
       loyaltyPoints: { label: 'Sellos', balance: { string: '7/10' } },
       heroImage: {
-        sourceUri: { uri: `${IMG}/hero-${i + 1}.jpg` },
+        sourceUri: { uri: `${IMG}/${IMAGENES[i]}` },
         contentDescription: { defaultValue: { language: 'es', value: '7 de 10 sellos' } },
       },
       barcode: { type: 'QR_CODE', value: 'https://sellofiel.app', alternateText: '7/10 sellos' },
